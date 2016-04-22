@@ -1,0 +1,19 @@
+group 'com.devtrigger.grails.icu'
+version '0.2.0'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile("org.springframework:spring-core:4.+") {
+        exclude module: 'commons-logging'
+    }
+    compile "org.springframework:spring-context:4.+"
+
+    compile "com.ibm.icu:icu4j:57.1"
+}

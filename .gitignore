@@ -2,7 +2,10 @@ target
 
 *.zip
 *.zip.sha1
-plugin.xml
+
+# Gradle
+.gradle
+build
 
 .classpath
 .project

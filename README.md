@@ -5,15 +5,15 @@ rule based number format, date interval formats.
 
 ## Features
 ### Named arguments
-By default Grails allows to use only numbered arguments in i18n messages. The plugin allows to use also named arguments,
-which sometimes are more readable. For example:
+By default Spring allows you to use only numbered arguments in i18n messages. ICU4j support named arguments using Map,
+which are sometimes are more readable. For example:
 ```
 numbered={0}, you have {1} unread messages of {2}
 names={username}, you have {unread} unread messages of {total}
 ```
-With the plugin, latter message can be used:
-```html
-<g:message code="names" args="[username: 'John', unread: 12, total: 200]"/>
+With ICU4J, you can do this:
+```Groovy
+String message = icuMessageSource.getMessage("names", [username: 'John', unread: 12, total: 200], locale)
 ```
 will output `John, you have 12 unread messages of 200`.
 ### Plural formatting
@@ -23,16 +23,16 @@ which cannot be handled by default. The plugin provides a simple pluralization u
 ```
 plural={0} {0, plural, one{auto}few{auta}many{aut}other{aut}}
 ```
-```html
-<g:message code="plural" args="[3]"/>, <g:message code="plural" args="[7]"/>
+```Groovy
+String message = icuMessageSource.getMessage("plural", [7], locale)
 ```
 will output `3 auta, 7 aut`.
 ### Rule based number formatting
 ```
 amount={0, spellout} dollars
 ```
-```html
-<g:message code="amount" args="[12045]"/>
+```Groovy
+String message = icuMessageSource.getMessage("amount", [12045], locale)
 ```
 will output `twelve thousand forty-five dollars`.
 ### Other features
@@ -42,7 +42,24 @@ begins quoting, which requires common text like "don't" and "aujourd'hui" to be 
 - Many more date formats: month+day, year+month,...
 - Date interval formats: "Dec 15-17, 2009"
 
+# Spring Boot Usage
+Define the bean. `messageSource` currently causes errors. See issues
+```Java
+@Bean
+public ICUMessageSource icuMessageSource() {
+    ICUReloadableResourceBundleMessageSource messageSource = new ICUReloadableResourceBundleMessageSource();
+    messageSource.setBasename("classpath:locale/messages");
+    messageSource.setCacheSeconds(3600);
+    return messageSource;
+}
+```
+Place your message properties files
+```
+src/main/resources/locale
+```
+
+
 # License
-This plugin is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+This library is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 (c) All rights reserved
