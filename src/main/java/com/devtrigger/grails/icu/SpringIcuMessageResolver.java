@@ -1,6 +1,5 @@
-package com.transferwise.bankcodes.config;
+package com.devtrigger.grails.icu;
 
-import com.devtrigger.grails.icu.ICUMessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.exceptions.ConfigurationException;
