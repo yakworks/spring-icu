@@ -7,7 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Extends the {@link org.springframework.context.MessageSource} interface in that adds support for passing
+ * Extends the {@link org.springframework.context.MessageSource} interface in that adds util for passing
  * arguments as Map
  */
 public interface ICUMessageSource extends HierarchicalMessageSource {

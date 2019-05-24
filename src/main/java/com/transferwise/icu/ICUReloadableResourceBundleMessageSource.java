@@ -1,8 +1,8 @@
 package com.transferwise.icu;
 
 import com.ibm.icu.text.MessageFormat;
-import grails.util.CacheEntry;
-import grails.util.Pair;
+import com.transferwise.icu.util.CacheEntry;
+import com.transferwise.icu.util.Pair;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;

@@ -241,7 +241,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
                     return parent.getMessage(code, listArgs.toArray(), null, locale);
                 } else {
                     // returning a null because the parent is not an instance of ICUAbstractMessageSource and
-                    // therefore doesn't support arguments as map
+                    // therefore doesn't util arguments as map
                     return null;
                 }
             }
@@ -299,7 +299,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * it is advisable to circumvent MessageFormat for messages without arguments.
      * @param code the code of the message to resolve
      * @param locale the Locale to resolve the code for
-     * (subclasses are encouraged to support internationalization)
+     * (subclasses are encouraged to util internationalization)
      * @return the message String, or {@code null} if not found
      * @see #resolveCode
      * @see java.text.MessageFormat
@@ -323,7 +323,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * See the {@link #resolveCodeWithoutArguments} javadoc for details.
      * @param code the code of the message to resolve
      * @param locale the Locale to resolve the code for
-     * (subclasses are encouraged to support internationalization)
+     * (subclasses are encouraged to util internationalization)
      * @return the MessageFormat for the message, or {@code null} if not found
      * @see #resolveCodeWithoutArguments(String, java.util.Locale)
      */
