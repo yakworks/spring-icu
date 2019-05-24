@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'com.transferwise.com'
-version '0.2.1'
+version '0.2.3'
 sourceCompatibility = 1.8
 
 repositories {
