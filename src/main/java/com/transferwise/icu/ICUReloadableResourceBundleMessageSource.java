@@ -1,4 +1,4 @@
-package com.devtrigger.grails.icu;
+package com.transferwise.icu;
 
 import com.ibm.icu.text.MessageFormat;
 import grails.util.CacheEntry;

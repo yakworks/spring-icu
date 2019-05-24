@@ -1,4 +1,4 @@
-package com.devtrigger.grails.icu;
+package com.transferwise.icu;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

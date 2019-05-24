@@ -1,4 +1,4 @@
-package com.devtrigger.grails.icu;
+package com.transferwise.icu;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
