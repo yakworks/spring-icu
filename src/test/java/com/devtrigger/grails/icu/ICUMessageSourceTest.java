@@ -1,6 +1,9 @@
 package com.devtrigger.grails.icu;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -8,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -22,16 +26,18 @@ class ICUMessageSourceTest {
         this.messageSource = messageSource;
     }
 
-    @Test
-    void testSimple() {
-        String msg = messageSource.getMessage("simple", new Object[]{}, Locale.ENGLISH);
-        assertEquals("Refresh inbox", msg);
+    private static Stream<Arguments> localesArgs() {
+        return Stream.of(
+                Arguments.of(Locale.ENGLISH, "Refresh inbox"),
+                Arguments.of(Locale.FRENCH, "Actualiser la boîte de réception")
+        );
     }
 
-    @Test
-    void testSimpleLocale() {
-        String msg = messageSource.getMessage("simple", new Object[]{}, Locale.FRENCH);
-        assertEquals("Actualiser la boîte de réception", msg);
+    @ParameterizedTest
+    @MethodSource("localesArgs")
+    void testLocales(Locale locale, String expected) {
+        String msg = messageSource.getMessage("simple", new Object[]{}, locale);
+        assertEquals(expected, msg);
     }
 
     @Test
@@ -42,132 +48,91 @@ class ICUMessageSourceTest {
         assertEquals("Attachment confidential.pdf saved", msg);
     }
 
-    @Test
-    void testPlurals1() {
+    private static Stream<Arguments> pluralsArgs() {
+        return Stream.of(
+                Arguments.of(1, "Message"),
+                Arguments.of(2, "Messages")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("pluralsArgs")
+    void testPlurals(int count, String expected) {
         Map<String, Object> args = new HashMap<>();
-        args.put("count", 1);
+        args.put("count", count);
         String msg = messageSource.getMessage("plurals.language.specific", args, Locale.ENGLISH);
-        assertEquals("Message", msg);
+        assertEquals(expected, msg);
     }
 
-    @Test
-    void testPlurals2() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 2);
-        String msg = messageSource.getMessage("plurals.language.specific", args, Locale.ENGLISH);
-        assertEquals("Messages", msg);
+    private static Stream<Arguments> pluralsExactMatchesArgs() {
+        return Stream.of(
+                Arguments.of(0, "No messages"),
+                Arguments.of(1, "1 message"),
+                Arguments.of(2, "2 messages")
+        );
     }
 
-    @Test
-    void testPluralsExactMatches0() {
+    @ParameterizedTest
+    @MethodSource("pluralsExactMatchesArgs")
+    void testPluralsExactMatches(int count, String expected) {
         Map<String, Object> args = new HashMap<>();
-        args.put("count", 0);
+        args.put("count", count);
         String msg = messageSource.getMessage("plurals.exact.matches", args, Locale.ENGLISH);
-        assertEquals("No messages", msg);
+        assertEquals(expected, msg);
     }
 
-    @Test
-    void testPluralsExactMatches1() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 1);
-        String msg = messageSource.getMessage("plurals.exact.matches", args, Locale.ENGLISH);
-        assertEquals("1 message", msg);
+    private static Stream<Arguments> pluralsOffsettingFormArgs() {
+        return Stream.of(
+                Arguments.of(0, "Nobody read this message"),
+                Arguments.of(1, "Only you read this message"),
+                Arguments.of(2, "You and 1 friend read this message"),
+                Arguments.of(3, "You and 2 friends read this message")
+        );
     }
 
-    @Test
-    void testPluralsExactMatches2() {
+    @ParameterizedTest
+    @MethodSource("pluralsOffsettingFormArgs")
+    void testPluralsOffsettingForm(int count, String expected) {
         Map<String, Object> args = new HashMap<>();
-        args.put("count", 2);
-        String msg = messageSource.getMessage("plurals.exact.matches", args, Locale.ENGLISH);
-        assertEquals("2 messages", msg);
-    }
-
-    @Test
-    void testPluralsOffsettingForm0() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 0);
+        args.put("count", count);
         String msg = messageSource.getMessage("plurals.offsetting.form", args, Locale.ENGLISH);
-        assertEquals("Nobody read this message", msg);
+        assertEquals(expected, msg);
     }
 
-    @Test
-    void testPluralsOffsettingForm1() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 1);
-        String msg = messageSource.getMessage("plurals.offsetting.form", args, Locale.ENGLISH);
-        assertEquals("Only you read this message", msg);
+    private static Stream<Arguments> selectArgs() {
+        return Stream.of(
+                Arguments.of("male", "He replied to your message"),
+                Arguments.of("female", "She replied to your message"),
+                Arguments.of("other", "They replied to your message")
+        );
     }
 
-    @Test
-    void testPluralsOffsettingForm2() {
+    @ParameterizedTest
+    @MethodSource("selectArgs")
+    void testSelect(String gender, String expected) {
         Map<String, Object> args = new HashMap<>();
-        args.put("count", 2);
-        String msg = messageSource.getMessage("plurals.offsetting.form", args, Locale.ENGLISH);
-        assertEquals("You and 1 friend read this message", msg);
-    }
-
-    @Test
-    void testPluralsOffsettingForm3() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 3);
-        String msg = messageSource.getMessage("plurals.offsetting.form", args, Locale.ENGLISH);
-        assertEquals("You and 2 friends read this message", msg);
-    }
-
-    @Test
-    void testSelectMale() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("gender", "male");
+        args.put("gender", gender);
         String msg = messageSource.getMessage("select", args, Locale.ENGLISH);
-        assertEquals("He replied to your message", msg);
+        assertEquals(expected, msg);
     }
 
-    @Test
-    void testSelectFemale() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("gender", "female");
-        String msg = messageSource.getMessage("select", args, Locale.ENGLISH);
-        assertEquals("She replied to your message", msg);
+    private static Stream<Arguments> ordinalsArgs() {
+        return Stream.of(
+                Arguments.of(1, "1st message"),
+                Arguments.of(2, "2nd message"),
+                Arguments.of(3, "3rd message"),
+                Arguments.of(4, "4th message"),
+                Arguments.of(5, "5th message")
+        );
     }
 
-    @Test
-    void testSelectOther() {
+    @ParameterizedTest
+    @MethodSource("ordinalsArgs")
+    void testOrdinals(int count, String expected) {
         Map<String, Object> args = new HashMap<>();
-        args.put("gender", "other");
-        String msg = messageSource.getMessage("select", args, Locale.ENGLISH);
-        assertEquals("They replied to your message", msg);
-    }
-
-    @Test
-    void testOrdinals1() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 1);
+        args.put("count", count);
         String msg = messageSource.getMessage("ordinals", args, Locale.ENGLISH);
-        assertEquals("1st message", msg);
-    }
-
-    @Test
-    void testOrdinals2() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 2);
-        String msg = messageSource.getMessage("ordinals", args, Locale.ENGLISH);
-        assertEquals("2nd message", msg);
-    }
-
-    @Test
-    void testOrdinals3() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 3);
-        String msg = messageSource.getMessage("ordinals", args, Locale.ENGLISH);
-        assertEquals("3rd message", msg);
-    }
-
-    @Test
-    void testOrdinals4() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("count", 4);
-        String msg = messageSource.getMessage("ordinals", args, Locale.ENGLISH);
-        assertEquals("4th message", msg);
+        assertEquals(expected, msg);
     }
 
     @Test
