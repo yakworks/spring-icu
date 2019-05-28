@@ -1,11 +1,12 @@
 package com.transferwise.icu;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 
@@ -16,30 +17,25 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class SpringIcuTemplateEngineTest {
+class SpringTemplateEngineTest {
 
-    private SpringIcuTemplateEngine templateEngine;
+    private SpringTemplateEngine templateEngine;
 
-    SpringIcuTemplateEngineTest() {
+    SpringTemplateEngineTest() {
         ICUReloadableResourceBundleMessageSource messageSource = new ICUReloadableResourceBundleMessageSource();
         messageSource.setDefaultEncoding("UTF-8");
         messageSource.setBasename("messages");
 
-        ApplicationContext applicationContext = new StaticApplicationContext();
-
         SpringResourceTemplateResolver templateResolver = new SpringResourceTemplateResolver();
-        templateResolver.setApplicationContext(applicationContext);
+        templateResolver.setApplicationContext(new StaticApplicationContext());
         templateResolver.setPrefix("classpath:/templates/");
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode(TemplateMode.HTML);
 
-        SpringIcuMessageResolver messageResolver = new SpringIcuMessageResolver();
-        messageResolver.setIcuMessageSource(messageSource);
-
-        templateEngine = new SpringIcuTemplateEngine();
+        templateEngine = new SpringTemplateEngine();
+        templateEngine.setMessageSource(messageSource);
         templateEngine.setEnableSpringELCompiler(true);
         templateEngine.setTemplateResolver(templateResolver);
-        templateEngine.setMessageResolver(messageResolver);
     }
 
     private static Stream<Arguments> pluralsOffsettingFormArgs() {

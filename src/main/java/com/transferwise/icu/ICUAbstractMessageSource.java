@@ -83,12 +83,24 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
 
     @Override
     public final String getMessage(String code, Object[] args, String defaultMessage, Locale locale) {
-        return getMessage(code, new ICUListMessageArguments(args), defaultMessage, locale);
+        if (isNamedArgumentsMapPresent(args)) {
+            return getMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), defaultMessage, locale);
+        } else {
+            return getMessage(code, new ICUListMessageArguments(args), defaultMessage, locale);
+        }
     }
 
     @Override
     public final String getMessage(String code, Object[] args, Locale locale) throws NoSuchMessageException {
-        return getMessage(code, new ICUListMessageArguments(args), locale);
+        if (isNamedArgumentsMapPresent(args)) {
+            return getMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), locale);
+        } else {
+            return getMessage(code, new ICUListMessageArguments(args), locale);
+        }
+    }
+
+    private boolean isNamedArgumentsMapPresent(Object... args) {
+        return args.length == 1 && args[0] instanceof Map;
     }
 
     @Override

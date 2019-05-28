@@ -41,10 +41,16 @@ class ICUMessageSourceTest {
     }
 
     @Test
-    void testVariables() {
+    void testNamedArguments() {
         Map<String, Object> args = new HashMap<>();
         args.put("name", "confidential.pdf");
-        String msg = messageSource.getMessage("variables", args, Locale.ENGLISH);
+        String msg = messageSource.getMessage("named.arguments", args, Locale.ENGLISH);
+        assertEquals("Attachment confidential.pdf saved", msg);
+    }
+
+    @Test
+    void testUnnamedArguments() {
+        String msg = messageSource.getMessage("unnamed.arguments", new Object[]{"confidential.pdf"}, Locale.ENGLISH);
         assertEquals("Attachment confidential.pdf saved", msg);
     }
 
