@@ -1,11 +1,31 @@
+/*
+ * Copyright 2002-2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.transferwise.icu;
+
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 import com.ibm.icu.text.MessageFormat;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.NoSuchMessageException;
-
-import java.util.*;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 /**
  * ICU4j MessageFormat aware {@link org.springframework.context.support.AbstractMessageSource} drop-in
@@ -13,19 +33,22 @@ import java.util.*;
  */
 public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport implements ICUMessageSource {
 
+    @Nullable
     private MessageSource parentMessageSource;
 
+    @Nullable
     private Properties commonMessages;
 
     private boolean useCodeAsDefaultMessage = false;
 
 
     @Override
-    public void setParentMessageSource(MessageSource parent) {
+    public void setParentMessageSource(@Nullable MessageSource parent) {
         this.parentMessageSource = parent;
     }
 
     @Override
+    @Nullable
     public MessageSource getParentMessageSource() {
         return this.parentMessageSource;
     }
@@ -36,13 +59,14 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * <p>May also link to an externally defined Properties object, e.g. defined
      * through a {@link org.springframework.beans.factory.config.PropertiesFactoryBean}.
      */
-    public void setCommonMessages(Properties commonMessages) {
+    public void setCommonMessages(@Nullable Properties commonMessages) {
         this.commonMessages = commonMessages;
     }
 
     /**
      * Return a Properties object defining locale-independent common messages, if any.
      */
+    @Nullable
     protected Properties getCommonMessages() {
         return this.commonMessages;
     }
@@ -61,7 +85,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * to delegate to the internal {@link #getMessageInternal} method if available.
      * In general, it is recommended to just use "useCodeAsDefaultMessage" during
      * development and not rely on it in production in the first place, though.
-     * @see #getMessage(String, Object[], java.util.Locale)
+     * @see #getMessage(String, Object[], Locale)
      * @see org.springframework.validation.FieldError
      */
     public void setUseCodeAsDefaultMessage(boolean useCodeAsDefaultMessage) {
@@ -79,7 +103,6 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     protected boolean isUseCodeAsDefaultMessage() {
         return this.useCodeAsDefaultMessage;
     }
-
 
     @Override
     public final String getMessage(String code, Object[] args, String defaultMessage, Locale locale) {
@@ -113,21 +136,18 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
         return getMessage(code, new ICUMapMessageArguments(args), locale);
     }
 
-    private String getMessage(String code, ICUMessageArguments args, String defaultMessage, Locale locale) {
+    public final String getMessage(String code, ICUMessageArguments args, @Nullable String defaultMessage, Locale locale) {
         String msg = getMessageInternal(code, args, locale);
         if (msg != null) {
             return msg;
         }
         if (defaultMessage == null) {
-            String fallback = getDefaultMessage(code);
-            if (fallback != null) {
-                return fallback;
-            }
+            return getDefaultMessage(code);
         }
         return renderDefaultMessage(defaultMessage, args, locale);
     }
 
-    private String getMessage(String code, ICUMessageArguments args, Locale locale) throws NoSuchMessageException {
+    public final String getMessage(String code, ICUMessageArguments args, Locale locale) throws NoSuchMessageException {
         String msg = getMessageInternal(code, args, locale);
         if (msg != null) {
             return msg;
@@ -140,9 +160,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     }
 
     @Override
-    public final String getMessage(MessageSourceResolvable resolvable, Locale locale)
-            throws NoSuchMessageException {
-
+    public final String getMessage(MessageSourceResolvable resolvable, Locale locale) throws NoSuchMessageException {
         String[] codes = resolvable.getCodes();
         if (codes == null) {
             codes = new String[0];
@@ -173,25 +191,26 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * returning {@code null} if not found. Does <i>not</i> fall back to
      * the code as default message. Invoked by {@code getMessage} methods.
      * @param code the code to lookup up, such as 'calculator.noRateSet'
-     * @param args arguments that will be filled in for params within the message
-     * @param locale the Locale in which to do the lookup
+     * @param args array of arguments that will be filled in for params
+     * within the message
+     * @param locale the locale in which to do the lookup
      * @return the resolved message, or {@code null} if not found
-     * @see #getMessage(String, Object[], String, java.util.Locale)
-     * @see #getMessage(String, Object[], java.util.Locale)
-     * @see #getMessage(org.springframework.context.MessageSourceResolvable, java.util.Locale)
+     * @see #getMessage(String, Object[], String, Locale)
+     * @see #getMessage(String, Object[], Locale)
+     * @see #getMessage(MessageSourceResolvable, Locale)
      * @see #setUseCodeAsDefaultMessage
      */
-    protected String getMessageInternal(String code, ICUMessageArguments args, Locale locale) {
+    @Nullable
+    protected String getMessageInternal(@Nullable String code, ICUMessageArguments args, @Nullable Locale locale) {
         if (code == null) {
             return null;
         }
         if (locale == null) {
             locale = Locale.getDefault();
         }
-
         ICUMessageArguments argsToUse = args;
 
-        if (!isAlwaysUseMessageFormat() && args.isEmpty()) {
+        if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(args)) {
             // Optimized resolution: no arguments to apply,
             // therefore no MessageFormat needs to be involved.
             // Note that the default implementation still uses MessageFormat;
@@ -230,14 +249,15 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     }
 
     /**
-     * Try to retrieve the given message from the parent MessageSource, if any.
+     * Try to retrieve the given message from the parent {@code MessageSource}, if any.
      * @param code the code to lookup up, such as 'calculator.noRateSet'
-     * @param args arguments that will be filled in for params
+     * @param args array of arguments that will be filled in for params
      * within the message
-     * @param locale the Locale in which to do the lookup
+     * @param locale the locale in which to do the lookup
      * @return the resolved message, or {@code null} if not found
      * @see #getParentMessageSource()
      */
+    @Nullable
     protected String getMessageFromParent(String code, ICUMessageArguments args, Locale locale) {
         MessageSource parent = getParentMessageSource();
         if (parent != null) {
@@ -266,12 +286,13 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * Return a fallback default message for the given code, if any.
      * <p>Default is to return the code itself if "useCodeAsDefaultMessage" is activated,
      * or return no fallback else. In case of no fallback, the caller will usually
-     * receive a NoSuchMessageException from {@code getMessage}.
+     * receive a {@code NoSuchMessageException} from {@code getMessage}.
      * @param code the message code that we couldn't resolve
      * and that we didn't receive an explicit default message for
      * @return the default message to use, or {@code null} if none
      * @see #setUseCodeAsDefaultMessage
      */
+    @Nullable
     protected String getDefaultMessage(String code) {
         if (isUseCodeAsDefaultMessage()) {
             return code;
@@ -281,14 +302,15 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
 
 
     /**
-     * Searches through the given arguments, finds any MessageSourceResolvable
+     * Searches through the given array of objects, finds any MessageSourceResolvable
      * objects and resolves them.
      * <p>Allows for messages to have MessageSourceResolvables as arguments.
-     * @param args arguments for a message
+     * @param args array of arguments for a message
      * @param locale the locale to resolve through
+     * @return an array of arguments with any MessageSourceResolvables resolved
      */
     @Override
-    protected ICUMessageArguments resolveArguments(ICUMessageArguments args, final Locale locale) {
+    protected ICUMessageArguments resolveArguments(ICUMessageArguments args, Locale locale) {
         return args.transform(new ICUMessageArguments.Transformation() {
             @Override
             public Object transform(Object item) {
@@ -310,12 +332,13 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * pattern doesn't contain argument placeholders in the first place. Therefore,
      * it is advisable to circumvent MessageFormat for messages without arguments.
      * @param code the code of the message to resolve
-     * @param locale the Locale to resolve the code for
-     * (subclasses are encouraged to util internationalization)
+     * @param locale the locale to resolve the code for
+     * (subclasses are encouraged to support internationalization)
      * @return the message String, or {@code null} if not found
      * @see #resolveCode
      * @see java.text.MessageFormat
      */
+    @Nullable
     protected String resolveCodeWithoutArguments(String code, Locale locale) {
         MessageFormat messageFormat = resolveCode(code, locale);
         if (messageFormat != null) {
@@ -334,11 +357,12 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * for messages without arguments, not involving MessageFormat.</b>
      * See the {@link #resolveCodeWithoutArguments} javadoc for details.
      * @param code the code of the message to resolve
-     * @param locale the Locale to resolve the code for
-     * (subclasses are encouraged to util internationalization)
+     * @param locale the locale to resolve the code for
+     * (subclasses are encouraged to support internationalization)
      * @return the MessageFormat for the message, or {@code null} if not found
      * @see #resolveCodeWithoutArguments(String, java.util.Locale)
      */
-    protected abstract MessageFormat resolveCode(String code, Locale locale);
+    @Nullable
+    protected abstract com.ibm.icu.text.MessageFormat resolveCode(String code, Locale locale);
 
 }

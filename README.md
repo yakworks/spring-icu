@@ -1,4 +1,4 @@
-# ICU Support Grails Plugin
+# Spring MessageSource ICU Support
 
 Provides the [ICU4J](http://site.icu-project.org/) message formatting features, such as named arguments support, flexible plural formatting,
 rule based number format, date interval formats.
