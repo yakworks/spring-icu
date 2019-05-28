@@ -43,20 +43,18 @@ begins quoting, which requires common text like "don't" and "aujourd'hui" to be 
 - Date interval formats: "Dec 15-17, 2009"
 
 # Spring Boot Usage
-Define the bean. `messageSource` currently causes errors. See issues
+Define the bean.
+
 ```Java
 @Bean
-public ICUMessageSource icuMessageSource() {
+public MessageSource messageSource() {
     ICUReloadableResourceBundleMessageSource messageSource = new ICUReloadableResourceBundleMessageSource();
-    messageSource.setBasename("classpath:locale/messages");
-    messageSource.setCacheSeconds(3600);
+    messageSource.setBasename("classpath:messages");
     return messageSource;
 }
 ```
-Place your message properties files
-```
-src/main/resources/locale
-```
+
+Place your message.properties files under `src/main/resources`. See this projects test cases for some examples.
 
 
 # License
