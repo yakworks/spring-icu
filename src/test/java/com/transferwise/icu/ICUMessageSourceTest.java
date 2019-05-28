@@ -164,4 +164,19 @@ class ICUMessageSourceTest {
         String msg = messageSource.getMessage("dates", args, Locale.ENGLISH);
         assertEquals("The unix epoch is Jan 1, 1970", msg);
     }
+
+    @Test
+    void testDefaultMessage() {
+        String msg = messageSource.getMessage("nonexistent.message", new Object[]{"not used"}, "default", Locale.ENGLISH);
+        assertEquals("default", msg);
+    }
+
+    @Test
+    void testDefaultMessageWithNamedArguments() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("unimportant", "not used");
+
+        String msg = messageSource.getMessage("nonexistent.message", args, "default", Locale.ENGLISH);
+        assertEquals("default", msg);
+    }
 }

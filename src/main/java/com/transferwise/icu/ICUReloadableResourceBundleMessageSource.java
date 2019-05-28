@@ -1,16 +1,20 @@
-package com.transferwise.icu;
+/*
+ * Copyright 2002-2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import com.ibm.icu.text.MessageFormat;
-import com.transferwise.icu.util.CacheEntry;
-import com.transferwise.icu.util.Pair;
-import org.springframework.context.ResourceLoaderAware;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.util.Assert;
-import org.springframework.util.DefaultPropertiesPersister;
-import org.springframework.util.PropertiesPersister;
-import org.springframework.util.StringUtils;
+package com.transferwise.icu;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,17 +22,28 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantLock;
+
+import com.ibm.icu.text.MessageFormat;
+import org.springframework.context.ResourceLoaderAware;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.lang.Nullable;
+import org.springframework.util.DefaultPropertiesPersister;
+import org.springframework.util.PropertiesPersister;
+import org.springframework.util.StringUtils;
 
 /**
- * ICU4j MessageFormat aware {@link org.codehaus.groovy.grails.context.support.ReloadableResourceBundleMessageSource}
+ * ICU4j MessageFormat aware {@link org.springframework.context.support.ReloadableResourceBundleMessageSource}
  * drop-in
  * @see com.ibm.icu.text.MessageFormat
  */
-public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessageSource
+public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourceBasedMessageSource
         implements ResourceLoaderAware {
 
     private static final String PROPERTIES_SUFFIX = ".properties";
@@ -36,101 +51,31 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
     private static final String XML_SUFFIX = ".xml";
 
 
-    private String[] basenames = new String[0];
-
-    private String defaultEncoding;
-
+    @Nullable
     private Properties fileEncodings;
 
-    private boolean fallbackToSystemLocale = true;
-
-    protected long cacheMillis = -1;
-
-    protected long fileCacheMillis = Long.MIN_VALUE;
+    private boolean concurrentRefresh = true;
 
     private PropertiesPersister propertiesPersister = new DefaultPropertiesPersister();
 
     private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-    /** Cache to hold filename lists per Locale */
-    private final ConcurrentMap<Pair<String, Locale>, CacheEntry<List<Pair<String, Resource>>>> cachedFilenames =
-            new ConcurrentHashMap<Pair<String, Locale>, CacheEntry<List<Pair<String, Resource>>>>();
+    // Cache to hold filename lists per Locale
+    private final ConcurrentMap<String, Map<Locale, List<String>>> cachedFilenames = new ConcurrentHashMap<>();
 
-    /** Cache to hold already loaded properties per filename */
-    private final ConcurrentMap<String, CacheEntry<PropertiesHolder>> cachedProperties = new ConcurrentHashMap<String, CacheEntry<PropertiesHolder>>();
+    // Cache to hold already loaded properties per filename
+    private final ConcurrentMap<String, PropertiesHolder> cachedProperties = new ConcurrentHashMap<>();
 
-    /** Cache to hold merged loaded properties per locale */
-    private final ConcurrentMap<Locale, CacheEntry<PropertiesHolder>> cachedMergedProperties = new ConcurrentHashMap<Locale, CacheEntry<PropertiesHolder>>();
+    // Cache to hold already loaded properties per filename
+    private final ConcurrentMap<Locale, PropertiesHolder> cachedMergedProperties = new ConcurrentHashMap<>();
 
-    private final ConcurrentMap<String, CacheEntry<Resource>> cachedResources = new ConcurrentHashMap<String, CacheEntry<Resource>>();
-
-
-    /**
-     * Set a single basename, following the basic ResourceBundle convention of
-     * not specifying file extension or language codes, but in contrast to
-     * {@link org.springframework.context.support.ResourceBundleMessageSource} referring to a Spring resource location:
-     * e.g. "WEB-INF/messages" for "WEB-INF/messages.properties",
-     * "WEB-INF/messages_en.properties", etc.
-     * <p>XML properties files are also supported: .g. "WEB-INF/messages" will find
-     * and load "WEB-INF/messages.xml", "WEB-INF/messages_en.xml", etc as well.
-     * @param basename the single basename
-     * @see #setBasenames
-     * @see org.springframework.core.io.ResourceEditor
-     * @see java.util.ResourceBundle
-     */
-    public void setBasename(String basename) {
-        setBasenames(basename);
-    }
-
-    /**
-     * Set an array of basenames, each following the basic ResourceBundle convention
-     * of not specifying file extension or language codes, but in contrast to
-     * {@link org.springframework.context.support.ResourceBundleMessageSource} referring to a Spring resource location:
-     * e.g. "WEB-INF/messages" for "WEB-INF/messages.properties",
-     * "WEB-INF/messages_en.properties", etc.
-     * <p>XML properties files are also supported: .g. "WEB-INF/messages" will find
-     * and load "WEB-INF/messages.xml", "WEB-INF/messages_en.xml", etc as well.
-     * <p>The associated resource bundles will be checked sequentially when resolving
-     * a message code. Note that message definitions in a <i>previous</i> resource
-     * bundle will override ones in a later bundle, due to the sequential lookup.
-     * @param basenames an array of basenames
-     * @see #setBasename
-     * @see java.util.ResourceBundle
-     */
-    public void setBasenames(String... basenames) {
-        if (basenames != null) {
-            this.basenames = new String[basenames.length];
-            for (int i = 0; i < basenames.length; i++) {
-                String basename = basenames[i];
-                Assert.hasText(basename, "Basename must not be empty");
-                this.basenames[i] = basename.trim();
-            }
-        }
-        else {
-            this.basenames = new String[0];
-        }
-    }
-
-    /**
-     * Set the default charset to use for parsing properties files.
-     * Used if no file-specific charset is specified for a file.
-     * <p>Default is none, using the {@code java.util.Properties}
-     * default encoding: ISO-8859-1.
-     * <p>Only applies to classic properties files, not to XML files.
-     * @param defaultEncoding the default charset
-     * @see #setFileEncodings
-     * @see org.springframework.util.PropertiesPersister#load
-     */
-    public void setDefaultEncoding(String defaultEncoding) {
-        this.defaultEncoding = defaultEncoding;
-    }
 
     /**
      * Set per-file charsets to use for parsing properties files.
      * <p>Only applies to classic properties files, not to XML files.
-     * @param fileEncodings Properties with filenames as keys and charset
+     * @param fileEncodings a Properties with filenames as keys and charset
      * names as values. Filenames have to match the basename syntax,
-     * with optional locale-specific appendices: e.g. "WEB-INF/messages"
+     * with optional locale-specific components: e.g. "WEB-INF/messages"
      * or "WEB-INF/messages_en".
      * @see #setBasenames
      * @see org.springframework.util.PropertiesPersister#load
@@ -140,52 +85,18 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
     }
 
     /**
-     * Set whether to fall back to the system Locale if no files for a specific
-     * Locale have been found. Default is "true"; if this is turned off, the only
-     * fallback will be the default file (e.g. "messages.properties" for
-     * basename "messages").
-     * <p>Falling back to the system Locale is the default behavior of
-     * {@code java.util.ResourceBundle}. However, this is often not desirable
-     * in an application server environment, where the system Locale is not relevant
-     * to the application at all: Set this flag to "false" in such a scenario.
+     * Specify whether to allow for concurrent refresh behavior, i.e. one thread
+     * locked in a refresh attempt for a specific cached properties file whereas
+     * other threads keep returning the old properties for the time being, until
+     * the refresh attempt has completed.
+     * <p>Default is "true": this behavior is new as of Spring Framework 4.1,
+     * minimizing contention between threads. If you prefer the old behavior,
+     * i.e. to fully block on refresh, switch this flag to "false".
+     * @since 4.1
+     * @see #setCacheSeconds
      */
-    public void setFallbackToSystemLocale(boolean fallbackToSystemLocale) {
-        this.fallbackToSystemLocale = fallbackToSystemLocale;
-    }
-
-    /**
-     * Set the number of seconds to cache the list of matching properties files.
-     * <ul>
-     * <li>Default is "-1", indicating to cache forever (just like
-     * {@code java.util.ResourceBundle}).
-     * <li>A positive number will cache the list of matching properties files for the given
-     * number of seconds. This is essentially the interval between refresh checks.
-     * <li>A value of "0" will attemp to list the matching properties files on
-     * every message access. <b>Do not use this in a production environment!</b>
-     * </ul>
-     */
-    public void setCacheSeconds(int cacheSeconds) {
-        this.cacheMillis = (cacheSeconds * 1000);
-        if(fileCacheMillis==Long.MIN_VALUE) {
-            this.fileCacheMillis = this.cacheMillis;
-        }
-    }
-
-    /**
-     * Set the number of seconds to cache loaded properties files.
-     * <ul>
-     * <li>Default value is the same value as cacheSeconds
-     * <li>A positive number will cache loaded properties files for the given
-     * number of seconds. This is essentially the interval between refresh checks.
-     * Note that a refresh attempt will first check the last-modified timestamp
-     * of the file before actually reloading it; so if files don't change, this
-     * interval can be set rather low, as refresh attempts will not actually reload.
-     * <li>A value of "0" will check the last-modified timestamp of the file on
-     * every message access. <b>Do not use this in a production environment!</b>
-     * </ul>
-     */
-    public void setFileCacheSeconds(int fileCacheSeconds) {
-        this.fileCacheMillis = (fileCacheSeconds * 1000);
+    public void setConcurrentRefresh(boolean concurrentRefresh) {
+        this.concurrentRefresh = concurrentRefresh;
     }
 
     /**
@@ -193,7 +104,7 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
      * <p>The default is a DefaultPropertiesPersister.
      * @see org.springframework.util.DefaultPropertiesPersister
      */
-    public void setPropertiesPersister(PropertiesPersister propertiesPersister) {
+    public void setPropertiesPersister(@Nullable PropertiesPersister propertiesPersister) {
         this.propertiesPersister =
                 (propertiesPersister != null ? propertiesPersister : new DefaultPropertiesPersister());
     }
@@ -207,7 +118,8 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
      * @see org.springframework.core.io.DefaultResourceLoader
      * @see org.springframework.context.ResourceLoaderAware
      */
-    public void setResourceLoader(ResourceLoader resourceLoader) {
+    @Override
+    public void setResourceLoader(@Nullable ResourceLoader resourceLoader) {
         this.resourceLoader = (resourceLoader != null ? resourceLoader : new DefaultResourceLoader());
     }
 
@@ -218,7 +130,7 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
      */
     @Override
     protected String resolveCodeWithoutArguments(String code, Locale locale) {
-        if (this.cacheMillis < 0) {
+        if (getCacheMillis() < 0) {
             PropertiesHolder propHolder = getMergedProperties(locale);
             String result = propHolder.getProperty(code);
             if (result != null) {
@@ -226,15 +138,13 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
             }
         }
         else {
-            for (String basename : this.basenames) {
-                List<Pair<String, Resource>> filenamesAndResources = calculateAllFilenames(basename, locale);
-                for (Pair<String, Resource> filenameAndResource : filenamesAndResources) {
-                    if(filenameAndResource.getbValue() != null) {
-                        PropertiesHolder propHolder = getProperties(filenameAndResource.getaValue(), filenameAndResource.getbValue());
-                        String result = propHolder.getProperty(code);
-                        if (result != null) {
-                            return result;
-                        }
+            for (String basename : getBasenameSet()) {
+                List<String> filenames = calculateAllFilenames(basename, locale);
+                for (String filename : filenames) {
+                    PropertiesHolder propHolder = getProperties(filename);
+                    String result = propHolder.getProperty(code);
+                    if (result != null) {
+                        return result;
                     }
                 }
             }
@@ -245,10 +155,12 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
     /**
      * Resolves the given message code as key in the retrieved bundle files,
      * using a cached MessageFormat instance per message code.
+     * @return
      */
     @Override
+    @Nullable
     protected MessageFormat resolveCode(String code, Locale locale) {
-        if (this.cacheMillis < 0) {
+        if (getCacheMillis() < 0) {
             PropertiesHolder propHolder = getMergedProperties(locale);
             MessageFormat result = propHolder.getMessageFormat(code, locale);
             if (result != null) {
@@ -256,15 +168,13 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
             }
         }
         else {
-            for (String basename : this.basenames) {
-                List<Pair<String, Resource>> filenamesAndResources = calculateAllFilenames(basename, locale);
-                for (Pair<String, Resource> filenameAndResource : filenamesAndResources) {
-                    if(filenameAndResource.getbValue() != null) {
-                        PropertiesHolder propHolder = getProperties(filenameAndResource.getaValue(), filenameAndResource.getbValue());
-                        MessageFormat result = propHolder.getMessageFormat(code, locale);
-                        if (result != null) {
-                            return result;
-                        }
+            for (String basename : getBasenameSet()) {
+                List<String> filenames = calculateAllFilenames(basename, locale);
+                for (String filename : filenames) {
+                    PropertiesHolder propHolder = getProperties(filename);
+                    MessageFormat result = propHolder.getMessageFormat(code, locale);
+                    if (result != null) {
+                        return result;
                     }
                 }
             }
@@ -281,25 +191,33 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
      * with cacheSeconds < 0. Therefore, merged properties are always
      * cached forever.
      */
-    protected PropertiesHolder getMergedProperties(final Locale locale) {
-        return CacheEntry.getValue(cachedMergedProperties, locale, cacheMillis, new Callable<PropertiesHolder>() {
-            @Override
-            public PropertiesHolder call() throws Exception {
-                Properties mergedProps = new Properties();
-                PropertiesHolder mergedHolder = new PropertiesHolder(mergedProps);
-                for (int i = basenames.length - 1; i >= 0; i--) {
-                    List<Pair<String, Resource>> filenamesAndResources = calculateAllFilenames(basenames[i], locale);
-                    for (int j = filenamesAndResources.size() - 1; j >= 0; j--) {
-                        Pair<String, Resource> filenameAndResource = filenamesAndResources.get(j);
-                        if (filenameAndResource.getbValue() != null) {
-                            PropertiesHolder propHolder = getProperties(filenameAndResource.getaValue(), filenameAndResource.getbValue());
-                            mergedProps.putAll(propHolder.getProperties());
-                        }
+    protected PropertiesHolder getMergedProperties(Locale locale) {
+        PropertiesHolder mergedHolder = this.cachedMergedProperties.get(locale);
+        if (mergedHolder != null) {
+            return mergedHolder;
+        }
+        Properties mergedProps = newProperties();
+        long latestTimestamp = -1;
+        String[] basenames = StringUtils.toStringArray(getBasenameSet());
+        for (int i = basenames.length - 1; i >= 0; i--) {
+            List<String> filenames = calculateAllFilenames(basenames[i], locale);
+            for (int j = filenames.size() - 1; j >= 0; j--) {
+                String filename = filenames.get(j);
+                PropertiesHolder propHolder = getProperties(filename);
+                if (propHolder.getProperties() != null) {
+                    mergedProps.putAll(propHolder.getProperties());
+                    if (propHolder.getFileTimestamp() > latestTimestamp) {
+                        latestTimestamp = propHolder.getFileTimestamp();
                     }
                 }
-                return mergedHolder;
             }
-        });
+        }
+        mergedHolder = new PropertiesHolder(mergedProps, latestTimestamp);
+        PropertiesHolder existing = this.cachedMergedProperties.putIfAbsent(locale, mergedHolder);
+        if (existing != null) {
+            mergedHolder = existing;
+        }
+        return mergedHolder;
     }
 
     /**
@@ -312,30 +230,35 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
      * @see #setFallbackToSystemLocale
      * @see #calculateFilenamesForLocale
      */
-    protected List<Pair<String, Resource>> calculateAllFilenames(final String basename, final Locale locale) {
-        Pair<String, Locale> cacheKey = new Pair<String, Locale>(basename, locale);
-        return CacheEntry.getValue(cachedFilenames, cacheKey, cacheMillis, new Callable<List<Pair<String, Resource>>>() {
-            @Override
-            public List<Pair<String, Resource>> call() throws Exception {
-                List<String> filenames = new ArrayList<String>(7);
-                filenames.addAll(calculateFilenamesForLocale(basename, locale));
-                if (fallbackToSystemLocale && !locale.equals(Locale.getDefault())) {
-                    List<String> fallbackFilenames = calculateFilenamesForLocale(basename, Locale.getDefault());
-                    for (String fallbackFilename : fallbackFilenames) {
-                        if (!filenames.contains(fallbackFilename)) {
-                            // Entry for fallback locale that isn't already in filenames list.
-                            filenames.add(fallbackFilename);
-                        }
-                    }
-                }
-                filenames.add(basename);
-                List<Pair<String, Resource>> filenamesAndResources = new ArrayList<Pair<String, Resource>>(filenames.size());
-                for (String filename : filenames) {
-                    filenamesAndResources.add(new Pair<String, Resource>(filename, locateResource(filename)));
-                }
-                return filenamesAndResources;
+    protected List<String> calculateAllFilenames(String basename, Locale locale) {
+        Map<Locale, List<String>> localeMap = this.cachedFilenames.get(basename);
+        if (localeMap != null) {
+            List<String> filenames = localeMap.get(locale);
+            if (filenames != null) {
+                return filenames;
             }
-        });
+        }
+        List<String> filenames = new ArrayList<>(7);
+        filenames.addAll(calculateFilenamesForLocale(basename, locale));
+        if (isFallbackToSystemLocale() && !locale.equals(Locale.getDefault())) {
+            List<String> fallbackFilenames = calculateFilenamesForLocale(basename, Locale.getDefault());
+            for (String fallbackFilename : fallbackFilenames) {
+                if (!filenames.contains(fallbackFilename)) {
+                    // Entry for fallback locale that isn't already in filenames list.
+                    filenames.add(fallbackFilename);
+                }
+            }
+        }
+        filenames.add(basename);
+        if (localeMap == null) {
+            localeMap = new ConcurrentHashMap<>();
+            Map<Locale, List<String>> existing = this.cachedFilenames.putIfAbsent(basename, localeMap);
+            if (existing != null) {
+                localeMap = existing;
+            }
+        }
+        localeMap.put(locale, filenames);
+        return filenames;
     }
 
     /**
@@ -349,7 +272,7 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
      * @return the List of filenames to check
      */
     protected List<String> calculateFilenamesForLocale(String basename, Locale locale) {
-        List<String> result = new ArrayList<String>(3);
+        List<String> result = new ArrayList<>(3);
         String language = locale.getLanguage();
         String country = locale.getCountry();
         String variant = locale.getVariant();
@@ -382,50 +305,125 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
      * @param filename the bundle filename (basename + Locale)
      * @return the current PropertiesHolder for the bundle
      */
-    @SuppressWarnings("rawtypes")
-    protected PropertiesHolder getProperties(final String filename, final Resource resource) {
-        return CacheEntry.getValue(cachedProperties, filename, fileCacheMillis, new Callable<PropertiesHolder>() {
-            @Override
-            public PropertiesHolder call() throws Exception {
-                return new PropertiesHolder(filename, resource);
-            }
-        }, new Callable<CacheEntry>() {
-            @Override
-            public CacheEntry call() throws Exception {
-                return new PropertiesHolderCacheEntry();
-            }
-        }, true, null);
-    }
+    protected PropertiesHolder getProperties(String filename) {
+        PropertiesHolder propHolder = this.cachedProperties.get(filename);
+        long originalTimestamp = -2;
 
-    protected static class PropertiesHolderCacheEntry extends CacheEntry<PropertiesHolder> {
-        public PropertiesHolderCacheEntry() {
-            super();
+        if (propHolder != null) {
+            originalTimestamp = propHolder.getRefreshTimestamp();
+            if (originalTimestamp == -1 || originalTimestamp > System.currentTimeMillis() - getCacheMillis()) {
+                // Up to date
+                return propHolder;
+            }
+        }
+        else {
+            propHolder = new PropertiesHolder();
+            PropertiesHolder existingHolder = this.cachedProperties.putIfAbsent(filename, propHolder);
+            if (existingHolder != null) {
+                propHolder = existingHolder;
+            }
         }
 
-        @Override
-        protected PropertiesHolder updateValue(PropertiesHolder oldValue, Callable<PropertiesHolder> updater, Object cacheRequestObject)
-                throws Exception {
-            if(oldValue != null) {
-                oldValue.update();
-                return oldValue;
+        // At this point, we need to refresh...
+        if (this.concurrentRefresh && propHolder.getRefreshTimestamp() >= 0) {
+            // A populated but stale holder -> could keep using it.
+            if (!propHolder.refreshLock.tryLock()) {
+                // Getting refreshed by another thread already ->
+                // let's return the existing properties for the time being.
+                return propHolder;
             }
-            return updater.call();
+        }
+        else {
+            propHolder.refreshLock.lock();
+        }
+        try {
+            PropertiesHolder existingHolder = this.cachedProperties.get(filename);
+            if (existingHolder != null && existingHolder.getRefreshTimestamp() > originalTimestamp) {
+                return existingHolder;
+            }
+            return refreshProperties(filename, propHolder);
+        }
+        finally {
+            propHolder.refreshLock.unlock();
         }
     }
 
+    /**
+     * Refresh the PropertiesHolder for the given bundle filename.
+     * The holder can be {@code null} if not cached before, or a timed-out cache entry
+     * (potentially getting re-validated against the current last-modified timestamp).
+     * @param filename the bundle filename (basename + Locale)
+     * @param propHolder the current PropertiesHolder for the bundle
+     */
+    protected PropertiesHolder refreshProperties(String filename, @Nullable PropertiesHolder propHolder) {
+        long refreshTimestamp = (getCacheMillis() < 0 ? -1 : System.currentTimeMillis());
+
+        Resource resource = this.resourceLoader.getResource(filename + PROPERTIES_SUFFIX);
+        if (!resource.exists()) {
+            resource = this.resourceLoader.getResource(filename + XML_SUFFIX);
+        }
+
+        if (resource.exists()) {
+            long fileTimestamp = -1;
+            if (getCacheMillis() >= 0) {
+                // Last-modified timestamp of file will just be read if caching with timeout.
+                try {
+                    fileTimestamp = resource.lastModified();
+                    if (propHolder != null && propHolder.getFileTimestamp() == fileTimestamp) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Re-caching properties for filename [" + filename + "] - file hasn't been modified");
+                        }
+                        propHolder.setRefreshTimestamp(refreshTimestamp);
+                        return propHolder;
+                    }
+                }
+                catch (IOException ex) {
+                    // Probably a class path resource: cache it forever.
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(resource + " could not be resolved in the file system - assuming that it hasn't changed", ex);
+                    }
+                    fileTimestamp = -1;
+                }
+            }
+            try {
+                Properties props = loadProperties(resource, filename);
+                propHolder = new PropertiesHolder(props, fileTimestamp);
+            }
+            catch (IOException ex) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn("Could not parse properties file [" + resource.getFilename() + "]", ex);
+                }
+                // Empty holder representing "not valid".
+                propHolder = new PropertiesHolder();
+            }
+        }
+
+        else {
+            // Resource does not exist.
+            if (logger.isDebugEnabled()) {
+                logger.debug("No properties file found for [" + filename + "] - neither plain properties nor XML");
+            }
+            // Empty holder representing "not found".
+            propHolder = new PropertiesHolder();
+        }
+
+        propHolder.setRefreshTimestamp(refreshTimestamp);
+        this.cachedProperties.put(filename, propHolder);
+        return propHolder;
+    }
 
     /**
      * Load the properties from the given resource.
      * @param resource the resource to load from
      * @param filename the original bundle filename (basename + Locale)
      * @return the populated Properties instance
-     * @throws java.io.IOException if properties loading failed
+     * @throws IOException if properties loading failed
      */
     protected Properties loadProperties(Resource resource, String filename) throws IOException {
-        InputStream is = resource.getInputStream();
-        Properties props = new Properties();
-        try {
-            if (resource.getFilename().endsWith(XML_SUFFIX)) {
+        Properties props = newProperties();
+        try (InputStream is = resource.getInputStream()) {
+            String resourceFilename = resource.getFilename();
+            if (resourceFilename != null && resourceFilename.endsWith(XML_SUFFIX)) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Loading properties [" + resource.getFilename() + "]");
                 }
@@ -437,7 +435,7 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
                     encoding = this.fileEncodings.getProperty(filename);
                 }
                 if (encoding == null) {
-                    encoding = this.defaultEncoding;
+                    encoding = getDefaultEncoding();
                 }
                 if (encoding != null) {
                     if (logger.isDebugEnabled()) {
@@ -454,9 +452,19 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
             }
             return props;
         }
-        finally {
-            is.close();
-        }
+    }
+
+    /**
+     * Template method for creating a plain new {@link Properties} instance.
+     * The default implementation simply calls {@link Properties#Properties()}.
+     * <p>Allows for returning a custom {@link Properties} extension in subclasses.
+     * Overriding methods should just instantiate a custom {@link Properties} subclass,
+     * with no further initialization or population to be performed at that point.
+     * @return a plain Properties instance
+     * @since 4.2
+     */
+    protected Properties newProperties() {
+        return new Properties();
     }
 
 
@@ -468,8 +476,6 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
         logger.debug("Clearing entire resource bundle cache");
         this.cachedProperties.clear();
         this.cachedMergedProperties.clear();
-        this.cachedFilenames.clear();
-        this.cachedResources.clear();
     }
 
     /**
@@ -480,36 +486,15 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
         clearCache();
         if (getParentMessageSource() instanceof ICUReloadableResourceBundleMessageSource) {
             ((ICUReloadableResourceBundleMessageSource) getParentMessageSource()).clearCacheIncludingAncestors();
-        } else if (getParentMessageSource() instanceof org.springframework.context.support.ReloadableResourceBundleMessageSource) {
-            ((org.springframework.context.support.ReloadableResourceBundleMessageSource) getParentMessageSource()).clearCacheIncludingAncestors();
         }
     }
+
 
     @Override
     public String toString() {
-        return getClass().getName() + ": basenames=[" + StringUtils.arrayToCommaDelimitedString(this.basenames) + "]";
+        return getClass().getName() + ": basenames=" + getBasenameSet();
     }
 
-    protected Resource locateResource(final String filename) {
-        return CacheEntry.getValue(cachedResources, filename, cacheMillis, new Callable<Resource>() {
-            @Override
-            public Resource call() throws Exception {
-                return locateResourceWithoutCache(filename);
-            }
-        });
-    }
-
-    protected Resource locateResourceWithoutCache(String filename) {
-        Resource resource = resourceLoader.getResource(filename + PROPERTIES_SUFFIX);
-        if (!resource.exists()) {
-            resource = resourceLoader.getResource(filename + XML_SUFFIX);
-        }
-        if (resource.exists()) {
-            return resource;
-        } else {
-            return null;
-        }
-    }
 
     /**
      * PropertiesHolder for caching.
@@ -518,88 +503,48 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
      * (updated every time the cache entry gets re-validated).
      */
     protected class PropertiesHolder {
-        private Properties properties;
 
-        private String filename;
-        private Resource resource;
+        @Nullable
+        private final Properties properties;
 
-        private long fileTimestamp = -1;
+        private final long fileTimestamp;
 
-        /** Cache to hold already generated MessageFormats per message code */
-        private final ConcurrentMap<Pair<String, Locale>, CacheEntry<MessageFormat>> cachedMessageFormats =
-                new ConcurrentHashMap<Pair<String, Locale>, CacheEntry<MessageFormat>>();
+        private volatile long refreshTimestamp = -2;
 
-        public PropertiesHolder(String filename, Resource resource) {
-            this.filename = filename;
-            this.resource = resource;
-            doUpdate(true);
+        private final ReentrantLock refreshLock = new ReentrantLock();
+
+        /** Cache to hold already generated MessageFormats per message code. */
+        private final ConcurrentMap<String, Map<Locale, MessageFormat>> cachedMessageFormats =
+                new ConcurrentHashMap<>();
+
+        public PropertiesHolder() {
+            this.properties = null;
+            this.fileTimestamp = -1;
         }
 
-        public PropertiesHolder(Properties properties) {
+        public PropertiesHolder(Properties properties, long fileTimestamp) {
             this.properties = properties;
+            this.fileTimestamp = fileTimestamp;
         }
 
-        public boolean update() {
-            return doUpdate(false);
-        }
-
-        private boolean doUpdate(boolean initialization) {
-            if(filename == null) {
-                return false;
-            }
-            if(!initialization && cacheMillis >= 0) {
-                resource = locateResource(filename);
-            }
-            if(resource != null) {
-                long newFileTimestamp;
-                try {
-                    newFileTimestamp = resource.lastModified();
-                } catch (IOException ex) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(
-                                resource + " could not be resolved in the file system - assuming that is hasn't changed", ex);
-                    }
-                    newFileTimestamp = -1;
-                }
-                if (fileCacheMillis >= 0 && newFileTimestamp == fileTimestamp && this.properties != null) {
-                    return false;
-                }
-                try {
-                    this.properties = loadProperties(resource, filename);
-                    this.fileTimestamp = newFileTimestamp;
-                    this.cachedMessageFormats.clear();
-                }
-                catch (IOException ex) {
-                    if (logger.isWarnEnabled()) {
-                        logger.warn("Could not parse properties file [" + resource.getFilename() + "]", ex);
-                    }
-                }
-                return true;
-            }
-            else {
-                // Resource does not exist.
-                if (logger.isDebugEnabled()) {
-                    logger.debug("No properties file found for [" + filename + "] - neither plain properties nor XML");
-                }
-                this.properties = new Properties();
-                this.fileTimestamp = -1;
-                this.cachedMessageFormats.clear();
-                return true;
-            }
-        }
-
-        public String getFilename() {
-            return filename;
-        }
-
+        @Nullable
         public Properties getProperties() {
-            return properties;
+            return this.properties;
         }
 
         public long getFileTimestamp() {
-            return fileTimestamp;
+            return this.fileTimestamp;
         }
 
+        public void setRefreshTimestamp(long refreshTimestamp) {
+            this.refreshTimestamp = refreshTimestamp;
+        }
+
+        public long getRefreshTimestamp() {
+            return this.refreshTimestamp;
+        }
+
+        @Nullable
         public String getProperty(String code) {
             if (this.properties == null) {
                 return null;
@@ -607,23 +552,34 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractMessage
             return this.properties.getProperty(code);
         }
 
-        public MessageFormat getMessageFormat(final String code, final Locale locale) {
+        @Nullable
+        public MessageFormat getMessageFormat(String code, Locale locale) {
             if (this.properties == null) {
                 return null;
             }
-            Pair<String, Locale> cacheKey = new Pair<String, Locale>(code, locale);
-            return CacheEntry.getValue(cachedMessageFormats, cacheKey, -1, new Callable<MessageFormat>() {
-                @Override
-                public MessageFormat call() throws Exception {
-                    String msg = properties.getProperty(code);
-                    if (msg != null) {
-                        return createMessageFormat(msg, locale);
-                    } else {
-                        return null;
+            Map<Locale, MessageFormat> localeMap = this.cachedMessageFormats.get(code);
+            if (localeMap != null) {
+                MessageFormat result = localeMap.get(locale);
+                if (result != null) {
+                    return result;
+                }
+            }
+            String msg = this.properties.getProperty(code);
+            if (msg != null) {
+                if (localeMap == null) {
+                    localeMap = new ConcurrentHashMap<>();
+                    Map<Locale, MessageFormat> existing = this.cachedMessageFormats.putIfAbsent(code, localeMap);
+                    if (existing != null) {
+                        localeMap = existing;
                     }
                 }
-            });
+                MessageFormat result = createMessageFormat(msg, locale);
+                localeMap.put(locale, result);
+                return result;
+            }
+            return null;
         }
     }
 
 }
+
