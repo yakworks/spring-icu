@@ -106,7 +106,7 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
      */
     public void setPropertiesPersister(@Nullable PropertiesPersister propertiesPersister) {
         this.propertiesPersister =
-                (propertiesPersister != null ? propertiesPersister : new DefaultPropertiesPersister());
+            (propertiesPersister != null ? propertiesPersister : new DefaultPropertiesPersister());
     }
 
     /**
@@ -155,7 +155,6 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
     /**
      * Resolves the given message code as key in the retrieved bundle files,
      * using a cached MessageFormat instance per message code.
-     * @return
      */
     @Override
     @Nullable
@@ -196,6 +195,7 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
         if (mergedHolder != null) {
             return mergedHolder;
         }
+
         Properties mergedProps = newProperties();
         long latestTimestamp = -1;
         String[] basenames = StringUtils.toStringArray(getBasenameSet());
@@ -212,6 +212,7 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
                 }
             }
         }
+
         mergedHolder = new PropertiesHolder(mergedProps, latestTimestamp);
         PropertiesHolder existing = this.cachedMergedProperties.putIfAbsent(locale, mergedHolder);
         if (existing != null) {
@@ -238,10 +239,15 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
                 return filenames;
             }
         }
+
+        // Filenames for given Locale
         List<String> filenames = new ArrayList<>(7);
         filenames.addAll(calculateFilenamesForLocale(basename, locale));
-        if (isFallbackToSystemLocale() && !locale.equals(Locale.getDefault())) {
-            List<String> fallbackFilenames = calculateFilenamesForLocale(basename, Locale.getDefault());
+
+        // Filenames for default Locale, if any
+        Locale defaultLocale = getDefaultLocale();
+        if (defaultLocale != null && !defaultLocale.equals(locale)) {
+            List<String> fallbackFilenames = calculateFilenamesForLocale(basename, defaultLocale);
             for (String fallbackFilename : fallbackFilenames) {
                 if (!filenames.contains(fallbackFilename)) {
                     // Entry for fallback locale that isn't already in filenames list.
@@ -249,7 +255,10 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
                 }
             }
         }
+
+        // Filename for default bundle file
         filenames.add(basename);
+
         if (localeMap == null) {
             localeMap = new ConcurrentHashMap<>();
             Map<Locale, List<String>> existing = this.cachedFilenames.putIfAbsent(basename, localeMap);
@@ -580,6 +589,4 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
             return null;
         }
     }
-
 }
-

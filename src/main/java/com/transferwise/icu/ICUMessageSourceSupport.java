@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import com.ibm.icu.text.MessageFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,7 +31,7 @@ import org.springframework.util.ObjectUtils;
  */
 public abstract class ICUMessageSourceSupport {
 
-    private static final MessageFormat INVALID_MESSAGE_FORMAT = new MessageFormat("");
+    private static final com.ibm.icu.text.MessageFormat INVALID_MESSAGE_FORMAT = new com.ibm.icu.text.MessageFormat("");
 
     /** Logger available to subclasses. */
     protected final Log logger = LogFactory.getLog(getClass());
@@ -44,7 +43,7 @@ public abstract class ICUMessageSourceSupport {
      * Used for passed-in default messages. MessageFormats for resolved
      * codes are cached on a specific basis in subclasses.
      */
-    private final Map<String, Map<Locale, MessageFormat>> messageFormatsPerMessage = new HashMap<>();
+    private final Map<String, Map<Locale, com.ibm.icu.text.MessageFormat>> messageFormatsPerMessage = new HashMap<>();
 
 
     /**
@@ -59,7 +58,7 @@ public abstract class ICUMessageSourceSupport {
      * even when not defining argument placeholders, you need to set this
      * flag to "true". Else, only message texts with actual arguments
      * are supposed to be written with MessageFormat escaping.
-     * @see java.text.MessageFormat
+     * @see com.ibm.icu.text.MessageFormat
      */
     public void setAlwaysUseMessageFormat(boolean alwaysUseMessageFormat) {
         this.alwaysUseMessageFormat = alwaysUseMessageFormat;
@@ -106,9 +105,9 @@ public abstract class ICUMessageSourceSupport {
         if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(args)) {
             return msg;
         }
-        MessageFormat messageFormat = null;
+        com.ibm.icu.text.MessageFormat messageFormat = null;
         synchronized (this.messageFormatsPerMessage) {
-            Map<Locale, MessageFormat> messageFormatsPerLocale = this.messageFormatsPerMessage.get(msg);
+            Map<Locale, com.ibm.icu.text.MessageFormat> messageFormatsPerLocale = this.messageFormatsPerMessage.get(msg);
             if (messageFormatsPerLocale != null) {
                 messageFormat = messageFormatsPerLocale.get(locale);
             }
@@ -146,8 +145,8 @@ public abstract class ICUMessageSourceSupport {
      * @param locale the Locale to create a MessageFormat for
      * @return the MessageFormat instance
      */
-    protected MessageFormat createMessageFormat(String msg, Locale locale) {
-        return new MessageFormat(msg, locale);
+    protected com.ibm.icu.text.MessageFormat createMessageFormat(String msg, Locale locale) {
+        return new com.ibm.icu.text.MessageFormat(msg, locale);
     }
 
     /**
@@ -161,4 +160,5 @@ public abstract class ICUMessageSourceSupport {
     protected ICUMessageArguments resolveArguments(ICUMessageArguments args, Locale locale) {
         return args;
     }
+
 }

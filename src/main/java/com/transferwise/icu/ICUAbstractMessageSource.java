@@ -20,10 +20,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import com.ibm.icu.text.MessageFormat;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.NoSuchMessageException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
@@ -162,27 +162,20 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     @Override
     public final String getMessage(MessageSourceResolvable resolvable, Locale locale) throws NoSuchMessageException {
         String[] codes = resolvable.getCodes();
-        if (codes == null) {
-            codes = new String[0];
-        }
-        ICUMessageArguments args = new ICUListMessageArguments(resolvable.getArguments());
-        for (String code : codes) {
-            String msg = getMessageInternal(code, args, locale);
-            if (msg != null) {
-                return msg;
+        if (codes != null) {
+            for (String code : codes) {
+                ICUMessageArguments args = new ICUListMessageArguments(resolvable.getArguments());
+                String message = getMessageInternal(code, args, locale);
+                if (message != null) {
+                    return message;
+                }
             }
         }
-        String defaultMessage = resolvable.getDefaultMessage();
+        String defaultMessage = getDefaultMessage(resolvable, locale);
         if (defaultMessage != null) {
-            return renderDefaultMessage(defaultMessage, args, locale);
+            return defaultMessage;
         }
-        if (codes.length > 0) {
-            String fallback = getDefaultMessage(codes[0]);
-            if (fallback != null) {
-                return fallback;
-            }
-        }
-        throw new NoSuchMessageException(codes.length > 0 ? codes[codes.length - 1] : null, locale);
+        throw new NoSuchMessageException(!ObjectUtils.isEmpty(codes) ? codes[codes.length - 1] : "", locale);
     }
 
 
@@ -227,7 +220,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
             // are defined in the child MessageSource.
             argsToUse = resolveArguments(args, locale);
 
-            MessageFormat messageFormat = resolveCode(code, locale);
+            com.ibm.icu.text.MessageFormat messageFormat = resolveCode(code, locale);
             if (messageFormat != null) {
                 synchronized (messageFormat) {
                     return argsToUse.formatWith(messageFormat);
@@ -283,6 +276,39 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     }
 
     /**
+     * Get a default message for the given {@code MessageSourceResolvable}.
+     * <p>This implementation fully renders the default message if available,
+     * or just returns the plain default message {@code String} if the primary
+     * message code is being used as a default message.
+     * @param resolvable the value object to resolve a default message for
+     * @param locale the current locale
+     * @return the default message, or {@code null} if none
+     * @since 4.3.6
+     * @see #renderDefaultMessage(String, ICUMessageArguments, Locale)
+     * @see #getDefaultMessage(String)
+     */
+    @Nullable
+    protected String getDefaultMessage(MessageSourceResolvable resolvable, Locale locale) {
+        String defaultMessage = resolvable.getDefaultMessage();
+        String[] codes = resolvable.getCodes();
+        if (defaultMessage != null) {
+            if (resolvable instanceof DefaultMessageSourceResolvable &&
+                !((DefaultMessageSourceResolvable) resolvable).shouldRenderDefaultMessage()) {
+                // Given default message does not contain any argument placeholders
+                // (and isn't escaped for alwaysUseMessageFormat either) -> return as-is.
+                return defaultMessage;
+            }
+            if (!ObjectUtils.isEmpty(codes) && defaultMessage.equals(codes[0])) {
+                // Never format a code-as-default-message, even with alwaysUseMessageFormat=true
+                return defaultMessage;
+            }
+            ICUMessageArguments args = new ICUListMessageArguments(resolvable.getArguments());
+            return renderDefaultMessage(defaultMessage, args, locale);
+        }
+        return (!ObjectUtils.isEmpty(codes) ? getDefaultMessage(codes[0]) : null);
+    }
+
+    /**
      * Return a fallback default message for the given code, if any.
      * <p>Default is to return the code itself if "useCodeAsDefaultMessage" is activated,
      * or return no fallback else. In case of no fallback, the caller will usually
@@ -327,7 +353,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * <p>The default implementation <i>does</i> use MessageFormat, through
      * delegating to the {@link #resolveCode} method. Subclasses are encouraged
      * to replace this with optimized resolution.
-     * <p>Unfortunately, {@code java.text.MessageFormat} is not implemented
+     * <p>Unfortunately, {@code com.ibm.icu.text.MessageFormat} is not implemented
      * in an efficient fashion. In particular, it does not detect that a message
      * pattern doesn't contain argument placeholders in the first place. Therefore,
      * it is advisable to circumvent MessageFormat for messages without arguments.
@@ -336,11 +362,11 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * (subclasses are encouraged to support internationalization)
      * @return the message String, or {@code null} if not found
      * @see #resolveCode
-     * @see java.text.MessageFormat
+     * @see com.ibm.icu.text.MessageFormat
      */
     @Nullable
     protected String resolveCodeWithoutArguments(String code, Locale locale) {
-        MessageFormat messageFormat = resolveCode(code, locale);
+        com.ibm.icu.text.MessageFormat messageFormat = resolveCode(code, locale);
         if (messageFormat != null) {
             synchronized (messageFormat) {
                 return messageFormat.format(new Object[0]);
