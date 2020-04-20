@@ -1,5 +1,6 @@
 package com.transferwise.icu;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -58,8 +59,26 @@ class SpringTemplateEngineTest {
         String actual = templateEngine.process(
                 "pluralsOffsettingForm",
                 new Context(Locale.ENGLISH, contextVariables)
-        );
+        ).trim();
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    void testNamedArguments() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("irrelevant", "IRRELEVANT");
+        args.put("name", "NAME");
+        args.put("also.irrelevant", "ALSO_IRRELEVANT");
+
+        Map<String, Object> contextVariables = new HashMap<>();
+        contextVariables.put("messageArgs", args);
+
+        String actual = templateEngine.process(
+            "namedArguments",
+            new Context(Locale.ENGLISH, contextVariables)
+        ).trim();
+
+        assertEquals("<p>Attachment NAME saved</p>", actual);
     }
 }

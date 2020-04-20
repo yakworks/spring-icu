@@ -77,6 +77,14 @@ public MessageSource messageSource() {
 
 Place your message.properties files under `src/main/resources`. See this projects test cases for some examples.
 
+# Explanation
+
+Thymeleaf's [#messages](https://www.thymeleaf.org/doc/tutorials/2.1/usingthymeleaf.html#messages-1) does not support 
+passing a Map of named arguments to the MessageSource. However, it does support passing an array of objects. If the 
+array contains only one object and that object is an instance of a Map then we can cast that object to a
+`Map<String, Object>` and use that as our named arguments. 
+
+See com.transferwise.icu.ICUAbstractMessageSource.isNamedArgumentsMapPresent
 
 # License
 This library is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
