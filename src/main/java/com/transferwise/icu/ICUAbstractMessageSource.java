@@ -123,7 +123,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     }
 
     private boolean isNamedArgumentsMapPresent(Object... args) {
-        return args.length == 1 && args[0] instanceof Map;
+        return args != null && args.length == 1 && args[0] instanceof Map;
     }
 
     @Override
