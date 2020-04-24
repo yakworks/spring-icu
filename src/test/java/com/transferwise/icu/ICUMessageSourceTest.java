@@ -1,9 +1,6 @@
 package com.transferwise.icu;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -12,8 +9,10 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ICUMessageSourceTest {
 
@@ -179,4 +178,12 @@ class ICUMessageSourceTest {
         String msg = messageSource.getMessage("nonexistent.message", args, "default", Locale.ENGLISH);
         assertEquals("default", msg);
     }
+
+    @Test
+    void testNullArguments() {
+        Object[] args = null;
+        String message = messageSource.getMessage("simple", args, "default", Locale.ENGLISH);
+        assertEquals("Refresh inbox", message);
+    }
+
 }
