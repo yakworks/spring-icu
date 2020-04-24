@@ -105,7 +105,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     }
 
     @Override
-    public final String getMessage(String code, Object[] args, String defaultMessage, Locale locale) {
+    public final String getMessage(String code, @Nullable Object[] args, @Nullable String defaultMessage, Locale locale) {
         if (isNamedArgumentsMapPresent(args)) {
             return getMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), defaultMessage, locale);
         } else {
@@ -114,7 +114,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     }
 
     @Override
-    public final String getMessage(String code, Object[] args, Locale locale) throws NoSuchMessageException {
+    public final String getMessage(String code, @Nullable Object[] args, Locale locale) throws NoSuchMessageException {
         if (isNamedArgumentsMapPresent(args)) {
             return getMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), locale);
         } else {
@@ -122,17 +122,17 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
         }
     }
 
-    private boolean isNamedArgumentsMapPresent(Object... args) {
+    private boolean isNamedArgumentsMapPresent(@Nullable Object... args) {
         return args != null && args.length == 1 && args[0] instanceof Map;
     }
 
     @Override
-    public final String getMessage(String code, Map<String, Object> args, String defaultMessage, Locale locale) {
+    public final String getMessage(String code, @Nullable Map<String, Object> args, @Nullable String defaultMessage, Locale locale) {
         return getMessage(code, new ICUMapMessageArguments(args), defaultMessage, locale);
     }
 
     @Override
-    public final String getMessage(String code, Map<String, Object> args, Locale locale) throws NoSuchMessageException {
+    public final String getMessage(String code, @Nullable Map<String, Object> args, Locale locale) throws NoSuchMessageException {
         return getMessage(code, new ICUMapMessageArguments(args), locale);
     }
 

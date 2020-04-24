@@ -1,6 +1,7 @@
 package com.transferwise.icu;
 
 import com.ibm.icu.text.MessageFormat;
+import org.springframework.lang.Nullable;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -13,7 +14,7 @@ public class ICUMapMessageArguments implements ICUMessageArguments {
 
     Map<String, Object> args;
 
-    public ICUMapMessageArguments(Map<String, Object> args) {
+    public ICUMapMessageArguments(@Nullable Map<String, Object> args) {
         if (args == null) args = Collections.emptyMap();
         this.args = args;
     }
