@@ -79,10 +79,7 @@ Place your message.properties files under `src/main/resources`. See this project
 
 # Explanation
 
-Thymeleaf's [#messages](https://www.thymeleaf.org/doc/tutorials/2.1/usingthymeleaf.html#messages-1) does not support 
-passing a Map of named arguments to the MessageSource. However, it does support passing an array of objects. If the 
-array contains only one object and that object is an instance of a Map then we can cast that object to a
-`Map<String, Object>` and use that as our named arguments. 
+While `com.transferwise.icu.ICUMessageSource` defines methods that take a named argument map, `org.springframework.context.MessageSource` does not. Therefore, in order to support ICU in code that expects a `org.springframework.context.MessageSource` message source, such as Thymeleaf's [#messages](https://www.thymeleaf.org/doc/tutorials/2.1/usingthymeleaf.html#messages-1), we check if the first argument of the `Object[] args` parameter passed to `org.springframework.context.MessageSource#getMessage` is a Map and if so cast that argument to a `Map<String, Object>` and call `com.transferwise.icu.ICUMessageSource#getMessage`
 
 See com.transferwise.icu.ICUAbstractMessageSource.isNamedArgumentsMapPresent
 
