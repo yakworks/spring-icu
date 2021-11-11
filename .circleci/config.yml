@@ -81,11 +81,11 @@ workflows:
     jobs:
       - build:
           context: bot-context #context with shared ENV vars
-      - ship-gh-pages:
-          context: bot-context
-          requires: [ build ]
-          filters: { branches: { only: [ master, /release\/.*/ ] } }
+#      - ship-gh-pages:
+#          context: bot-context
+#          requires: [ build ]
+#          filters: { branches: { only: [ master, /release\/.*/ ] } }
       - ship-it:
           context: bot-context
-          requires: [build]
+          requires: [ build ]
           filters: { branches: { only: [ master, /release\/.*/ ] } }
