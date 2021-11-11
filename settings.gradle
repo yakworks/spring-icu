@@ -1,2 +1,5 @@
-rootProject.name = 'spring-icu'
+rootProject.name = 'spring-icu-root'
+//the releasable plugins
+include 'spring'
 
+findProject(':spring').name = 'spring-icu'

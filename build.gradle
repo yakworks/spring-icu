@@ -1,24 +1,143 @@
-plugins {
-    id 'java'
+//It all starts here
+buildscript {
+  repositories {
+    mavenLocal()
+    maven { url "https://plugins.gradle.org/m2/" }
+  }
+  dependencies {
+    classpath "org.yakworks:gradle-plugins:$vShipyak"
+    classpath "io.github.gradle-nexus:publish-plugin:$vMavenNexus"
+  }
 }
 
-group 'com.transferwise.com'
-version '0.2.3'
-sourceCompatibility = 1.8
+group = "org.yakworks"
 
-repositories {
+//our opinionated defaults for gradle groovy & grails projects
+apply plugin: 'yakworks.shipyak'
+apply plugin: "io.github.gradle-nexus.publish-plugin"
+
+// only setup publishing if its not a snapshot
+if(!isSnapshot) {
+  nexusPublishing {
+    repositories {
+      sonatype()
+    }
+  }
+}
+
+subprojects { subprj ->
+
+  group = "org.yakworks"
+
+  repositories {
+    mavenLocal()
+    maven { url "https://repo.grails.org/grails/core" }
     mavenCentral()
-}
+  }
 
-dependencies {
+  ext {
+    //consider them all java libs, set to false for examples/testing
+    isPublishable = true
+    isExample = false
+    // example test projects
+    if (subprj.name in [ 'springify', 'grailsify']){
+      isPublishable = false
+      isExample = true
+    }
+  }
+  apply plugin: 'java'
+
+  dependencies {
     implementation('org.springframework:spring-context:5.2.5.RELEASE') {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
-    implementation 'com.ibm.icu:icu4j:66.1'
+    implementation 'com.ibm.icu:icu4j:70.1'
+
+    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
 
     testImplementation 'org.thymeleaf:thymeleaf-spring5:3.0.11.RELEASE'
     testImplementation 'org.thymeleaf:thymeleaf:3.0.11.RELEASE'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.6.2'
 
-    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+    testImplementation "org.slf4j:slf4j-simple:1.7.30"
+    testImplementation "org.spockframework:spock-core:1.3-groovy-2.5"
+    testImplementation "org.springframework:spring-web:5.1.20.RELEASE"
+    testImplementation "org.springframework:spring-test:5.1.20.RELEASE"
+  }
+
+  plugins.withId('java') {
+    sourceCompatibility = "$javaCompatibility"
+    targetCompatibility = "$javaCompatibility"
+  }
+
+  plugins.withId('groovy') {
+    tasks.withType(GroovyCompile) {
+        configure(groovyOptions) {
+            // sets the path to sys properties so we can use it find grails-app/conf during AST
+            forkOptions.jvmArgs = ['-Xmx1524m', '-XX:+UseSerialGC', '-Dgradle.projectDir=' + project.projectDir.absolutePath]
+        }
+    }
+  }
+
+  // if its a lib then setup gpg signing, see signing.gnupg.keyName
+  if (isPublishable){
+    apply plugin: 'java-library'
+
+    // gpg signing required by nexus/sonatype
+    apply plugin: 'signing'
+    afterEvaluate {
+      if(!isSnapshot) {
+        signing {
+          required { gradle.taskGraph.hasTask("publish") }
+          useGpgCmd()
+          sign publishing.publications.javaLibrary
+        }
+      }
+    }
+  } // end isPublishable
+
+  configurations {
+    testCompile.extendsFrom compileOnly //includes the compileOnly in tests too so we don't have to list twice
+    testCompile.extendsFrom implementation
+    testImplementation.extendsFrom compileOnly
+    // compile.extendsFrom implementation
+    all {
+      resolutionStrategy.cacheChangingModulesFor 1, 'seconds' //when changing = true this sets the cache time
+    }
+  }
+
+  tasks.withType(Test) {
+    //so that we can use in config and share resources/rootlocation across projects for testing
+    systemProperty "gradle.rootProjectDir", rootProject.projectDir.absolutePath
+    systemProperty "gradle.projectDir", project.projectDir.absolutePath
+  }
+
+}
+//overrides for the yakworks shipkit configs
+ext.codenarcRuleset= '''
+  // getRule('Println').enabled = false
+'''
+
+//TEST logging config for the logger plugin
+subprojects { subprj ->
+  test {
+    // Defaults from https://github.com/radarsh/gradle-test-logger-plugin
+    testlogger {
+      // theme 'standard'
+      showExceptions true
+      showStandardStreams = true //shows the printlns in console
+      showPassed true
+      showSkipped true
+      showFailed true
+      // slowThreshold 2000 //if tests take longer than this will show time it took
+      // showSummary true
+      // showSimpleNames false
+      // showPassed true
+      // showSkipped true
+      // showFailed true
+      // showPassedStandardStreams true
+      // showSkippedStandardStreams true
+      // showFailedStandardStreams true
+    }
+  }
 }
