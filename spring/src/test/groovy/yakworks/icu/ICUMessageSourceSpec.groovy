@@ -14,8 +14,9 @@ class ICUMessageSourceSpec extends Specification  {
 
     void setup() {
         DefaultICUMessageSource messageSource = new DefaultICUMessageSource()
-        messageSource.setDefaultEncoding("UTF-8")
-        messageSource.setBasename("messages")
+        messageSource.defaultEncoding = "UTF-8"
+        messageSource.basename = "messages"
+        messageSource.useCodeAsDefaultMessage = true
         this.messageSource = messageSource
     }
 
@@ -141,6 +142,12 @@ class ICUMessageSourceSpec extends Specification  {
     void testDefaultMessage() {
         expect:
         "default" == messageSource.getMessage("nonexistent.message", ["not used"] as Object[], "default", Locale.ENGLISH);
+    }
+
+    void "code shoudl be returned if nothing found"() {
+        expect:
+        "nonexistent.message" == messageSource.getMessage("nonexistent.message", [foo: 'bar'], null);
+        "nonexistent.message" == messageSource.getMessage("nonexistent.message", null, null);
     }
 
     void testDefaultMessageWithNamedArguments() {

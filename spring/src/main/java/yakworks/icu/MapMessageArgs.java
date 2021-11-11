@@ -10,11 +10,12 @@ import java.util.Map;
 /**
  * Map-based arguments implementation. Used with patterns which have named arguments
  */
+@SuppressWarnings("unchecked")
 public class MapMessageArgs implements ICUMessageArgs {
 
-    Map<String, Object> args;
+    Map<Object, Object> args;
 
-    public MapMessageArgs(@Nullable Map<String, Object> args) {
+    public MapMessageArgs(@Nullable Map<Object, Object> args) {
         if (args == null) args = Collections.emptyMap();
         this.args = args;
     }
@@ -26,8 +27,8 @@ public class MapMessageArgs implements ICUMessageArgs {
 
     @Override
     public MapMessageArgs transform(Transformation transformation) {
-        Map<String, Object> newArgs = new LinkedHashMap<String, Object>(args.size());
-        for (Map.Entry<String, Object> item: args.entrySet())
+        Map newArgs = new LinkedHashMap<>(args.size());
+        for (Map.Entry item: args.entrySet())
             newArgs.put(item.getKey(), transformation.transform(item.getValue()));
         return new MapMessageArgs(newArgs);
     }
