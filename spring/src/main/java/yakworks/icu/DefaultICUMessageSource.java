@@ -24,19 +24,18 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
 /**
- * ICU4j MessageFormat aware {@link ReloadableResourceBundleMessageSource}
- * drop-in
- * @see MessageFormat
+ * ICU4j Overrides, Lost of copy paste as so much in ReloadableResourceBundleMessageSource is
+ * private and final. The core issue here is that we need to return com.ibm.icu.text.MessageFormat and not java.text.MessageFormat
+ * from many of the methods and so can't easily override
  */
-public class RicuMessageSource extends RicuBundleMessageSource implements ICUMessageSource {
+@SuppressWarnings("unchecked")
+public class DefaultICUMessageSource extends ICUBundleMessageSource implements ICUMessageSource {
 
     private static final com.ibm.icu.text.MessageFormat INVALID_MESSAGE_FORMAT = new com.ibm.icu.text.MessageFormat("");
 
@@ -53,11 +52,11 @@ public class RicuMessageSource extends RicuBundleMessageSource implements ICUMes
         return args != null && args.length == 1 && args[0] instanceof Map;
     }
 
-    ICUMessageArguments getICUArgs(Object[] args){
+    ICUMessageArgs getICUArgs(Object[] args){
         if (isNamedArgumentsMapPresent(args)) {
-            return new ICUMapMessageArguments((Map)args[0]);
+            return new MapMessageArgs((Map)args[0]);
         } else {
-            return new ICUListMessageArguments(args);
+            return new ListMessageArgs(args);
         }
     }
 
@@ -68,7 +67,7 @@ public class RicuMessageSource extends RicuBundleMessageSource implements ICUMes
 
     @Override
     protected String formatMessage(String msg, @Nullable Object[] args, Locale locale) {
-        throw new UnsupportedOperationException("wrong one");
+        throw new UnsupportedOperationException("Use formatMessage with ICUMessageArguments");
     }
 
     /**
@@ -81,7 +80,7 @@ public class RicuMessageSource extends RicuBundleMessageSource implements ICUMes
      * @param locale the Locale used for formatting
      * @return the formatted message (with resolved arguments)
      */
-    protected String formatMessage(String msg, ICUMessageArguments args, Locale locale) {
+    protected String formatMessage(String msg, ICUMessageArgs args, Locale locale) {
         locale = checkLocale(locale);
         if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(args)) {
             return msg;
@@ -122,12 +121,12 @@ public class RicuMessageSource extends RicuBundleMessageSource implements ICUMes
 
     @Override
     public String getMessage(String code, @Nullable Map args, @Nullable String defaultMessage, Locale locale) {
-        return getICUMessage(code, new ICUMapMessageArguments(args), defaultMessage, locale);
+        return getICUMessage(code, new MapMessageArgs(args), defaultMessage, locale);
     }
 
     @Override
     public String getMessage(String code, @Nullable Map args, Locale locale) {
-        return getICUMessage(code, new ICUMapMessageArguments(args), null, locale);
+        return getICUMessage(code, new MapMessageArgs(args), null, locale);
     }
 
     @Override
@@ -139,7 +138,7 @@ public class RicuMessageSource extends RicuBundleMessageSource implements ICUMes
      * used for new map based methods and calls with a defaultMessage.
      * defaultMessage can be null and will use the code itself as a message.
      */
-    public final String getICUMessage(String code, ICUMessageArguments args, @Nullable String defaultMessage, Locale locale) {
+    public final String getICUMessage(String code, ICUMessageArgs args, @Nullable String defaultMessage, Locale locale) {
         String msg = getMessageInternal(code, args, locale);
         if (msg != null) {
             return msg;
@@ -157,14 +156,14 @@ public class RicuMessageSource extends RicuBundleMessageSource implements ICUMes
     }
 
     @Nullable
-    protected String getMessageInternal(@Nullable String code, ICUMessageArguments args, @Nullable Locale locale) {
+    protected String getMessageInternal(@Nullable String code, ICUMessageArgs args, @Nullable Locale locale) {
         if (code == null) {
             return null;
         }
 
         locale = checkLocale(locale);
 
-        ICUMessageArguments argsToUse = args;
+        ICUMessageArgs argsToUse = args;
 
         if (!isAlwaysUseMessageFormat() && args.isEmpty()) {
             // Optimized resolution: no arguments to apply,
@@ -203,8 +202,8 @@ public class RicuMessageSource extends RicuBundleMessageSource implements ICUMes
         return null;
     }
 
-    protected ICUMessageArguments resolveArguments(ICUMessageArguments args, Locale locale) {
-        return args.transform(new ICUMessageArguments.Transformation() {
+    protected ICUMessageArgs resolveArguments(ICUMessageArgs args, Locale locale) {
+        return args.transform(new ICUMessageArgs.Transformation() {
             @Override
             public Object transform(Object item) {
                 if (item instanceof MessageSourceResolvable)
@@ -214,20 +213,4 @@ public class RicuMessageSource extends RicuBundleMessageSource implements ICUMes
         });
     }
 
-    // @Override
-    // protected Object[] resolveArguments(@Nullable Object[] args, Locale locale) {
-    //     if (ObjectUtils.isEmpty(args)) {
-    //         return new Object[0];
-    //     }
-    //     List<Object> resolvedArgs = new ArrayList<>(args.length);
-    //     for (Object arg : args) {
-    //         if (arg instanceof MessageSourceResolvable) {
-    //             resolvedArgs.add(getMessage((MessageSourceResolvable) arg, locale));
-    //         }
-    //         else {
-    //             resolvedArgs.add(arg);
-    //         }
-    //     }
-    //     return resolvedArgs.toArray();
-    // }
 }

@@ -40,11 +40,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * ICU4j MessageFormat aware {@link org.springframework.context.support.ReloadableResourceBundleMessageSource}
- * drop-in
- * @see MessageFormat
+ * ICU4j Overrides, Lost of copy paste as so much in ReloadableResourceBundleMessageSource is
+ * private and final. The core issue here is that we need to return com.ibm.icu.text.MessageFormat and not java.text.MessageFormat
+ *
  */
-public class RicuBundleMessageSource extends ReloadableResourceBundleMessageSource {
+public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSource {
 
     private static final String PROPERTIES_SUFFIX = ".properties";
 
@@ -69,7 +69,7 @@ public class RicuBundleMessageSource extends ReloadableResourceBundleMessageSour
     @Override
     @Nullable
     protected java.text.MessageFormat resolveCode(String code, Locale locale) {
-        throw new UnsupportedOperationException("Dont use this one");
+        throw new UnsupportedOperationException("Use resolveCodeICU for ibm.icu");
     }
 
     /**
@@ -261,7 +261,7 @@ public class RicuBundleMessageSource extends ReloadableResourceBundleMessageSour
         @Override
         @Nullable
         public java.text.MessageFormat getMessageFormat(String code, Locale locale) {
-            throw new UnsupportedOperationException("Wrong one");
+            throw new UnsupportedOperationException("Use getMessageFormatICU for ibm.icu");
         }
 
         @Nullable
@@ -299,6 +299,6 @@ public class RicuBundleMessageSource extends ReloadableResourceBundleMessageSour
 
     @Override
     protected java.text.MessageFormat createMessageFormat(String msg, Locale locale) {
-        throw new UnsupportedOperationException("Wrong one");
+        throw new UnsupportedOperationException("Use createMessageFormatICU for ibm.icu");
     }
 }

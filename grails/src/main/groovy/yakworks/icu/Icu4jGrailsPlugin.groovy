@@ -10,7 +10,7 @@ class Icu4jGrailsPlugin extends grails.plugins.Plugin {
     def loadAfter = ['i18n']
 
     Closure doWithSpring() { {->
-        messageSource(ICUReloadableResourceBundleMessageSource) {
+        messageSource(DefaultICUMessageSource) {
             basename = "classpath:messages"
         }
     }}

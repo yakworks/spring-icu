@@ -5,9 +5,9 @@ import com.ibm.icu.text.MessageFormat;
 /**
  * Describes common behaviour of message arguments, both list- and map-based
  */
-public interface ICUMessageArguments {
+public interface ICUMessageArgs {
 
-    ICUMessageArguments transform(Transformation transformation);
+    ICUMessageArgs transform(Transformation transformation);
 
     boolean isEmpty();
 

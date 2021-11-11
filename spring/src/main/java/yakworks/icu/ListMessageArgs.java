@@ -11,16 +11,16 @@ import java.util.List;
 /**
  * Default, List-based arguments implementation. Used with patterns which have numbered arguments
  */
-public class ICUListMessageArguments implements ICUMessageArguments {
+public class ListMessageArgs implements ICUMessageArgs {
 
     private List<Object> args;
 
-    public ICUListMessageArguments(@Nullable List<Object> args) {
+    public ListMessageArgs(@Nullable List<Object> args) {
         if (args == null) args = Collections.emptyList();
         this.args = args;
     }
 
-    public ICUListMessageArguments(@Nullable Object[] args) {
+    public ListMessageArgs(@Nullable Object[] args) {
         if (args == null) args = new Object[0];
         this.args = Arrays.asList(args);
     }
@@ -31,11 +31,11 @@ public class ICUListMessageArguments implements ICUMessageArguments {
     }
 
     @Override
-    public ICUListMessageArguments transform(Transformation transformation) {
+    public ListMessageArgs transform(Transformation transformation) {
         List<Object> newArgs = new ArrayList<Object>(args.size());
         for (Object item : args)
             newArgs.add(transformation.transform(item));
-        return new ICUListMessageArguments(newArgs);
+        return new ListMessageArgs(newArgs);
     }
 
     @Override

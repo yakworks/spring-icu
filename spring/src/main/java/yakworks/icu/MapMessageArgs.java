@@ -10,11 +10,11 @@ import java.util.Map;
 /**
  * Map-based arguments implementation. Used with patterns which have named arguments
  */
-public class ICUMapMessageArguments implements ICUMessageArguments {
+public class MapMessageArgs implements ICUMessageArgs {
 
     Map<String, Object> args;
 
-    public ICUMapMessageArguments(@Nullable Map<String, Object> args) {
+    public MapMessageArgs(@Nullable Map<String, Object> args) {
         if (args == null) args = Collections.emptyMap();
         this.args = args;
     }
@@ -25,11 +25,11 @@ public class ICUMapMessageArguments implements ICUMessageArguments {
     }
 
     @Override
-    public ICUMapMessageArguments transform(Transformation transformation) {
+    public MapMessageArgs transform(Transformation transformation) {
         Map<String, Object> newArgs = new LinkedHashMap<String, Object>(args.size());
         for (Map.Entry<String, Object> item: args.entrySet())
             newArgs.put(item.getKey(), transformation.transform(item.getValue()));
-        return new ICUMapMessageArguments(newArgs);
+        return new MapMessageArgs(newArgs);
     }
 
     @Override

@@ -9,7 +9,6 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
-import yakworks.icu.ICUReloadableResourceBundleMessageSource;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -23,7 +22,7 @@ class SpringTemplateEngineTest {
     private SpringTemplateEngine templateEngine;
 
     SpringTemplateEngineTest() {
-        ICUReloadableResourceBundleMessageSource messageSource = new ICUReloadableResourceBundleMessageSource();
+        DefaultICUMessageSource messageSource = new DefaultICUMessageSource();
         messageSource.setDefaultEncoding("UTF-8");
         messageSource.setBasename("messages");
 

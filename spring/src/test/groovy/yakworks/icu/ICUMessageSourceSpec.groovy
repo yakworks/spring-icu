@@ -6,16 +6,14 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.stream.Stream
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
 
 class ICUMessageSourceSpec extends Specification  {
 
     private ICUMessageSource messageSource
 
     void setup() {
-        RicuMessageSource messageSource = new RicuMessageSource()
+        DefaultICUMessageSource messageSource = new DefaultICUMessageSource()
         messageSource.setDefaultEncoding("UTF-8")
         messageSource.setBasename("messages")
         this.messageSource = messageSource
