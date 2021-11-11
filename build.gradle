@@ -5,6 +5,7 @@ buildscript {
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
+    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:4.7.9"
     classpath "org.yakworks:gradle-plugins:$vShipyak"
     classpath "io.github.gradle-nexus:publish-plugin:$vMavenNexus"
   }
@@ -27,6 +28,9 @@ if(!isSnapshot) {
 
 subprojects { subprj ->
 
+  apply plugin: 'java'
+  apply plugin: "com.github.spotbugs"
+
   group = "org.yakworks"
 
   repositories {
@@ -45,13 +49,15 @@ subprojects { subprj ->
       isExample = true
     }
   }
-  apply plugin: 'java'
 
   dependencies {
     implementation('org.springframework:spring-context:5.2.5.RELEASE') {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
     implementation 'com.ibm.icu:icu4j:70.1'
+
+    compileOnly "com.github.spotbugs:spotbugs-annotations:${spotbugs.toolVersion.get()}"
+    // compileOnly "javax.annotation:javax.annotation-api:1.3.2"
 
     testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
 
@@ -68,6 +74,9 @@ subprojects { subprj ->
   plugins.withId('java') {
     sourceCompatibility = "$javaCompatibility"
     targetCompatibility = "$javaCompatibility"
+    tasks.withType(JavaCompile) {
+      options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
   }
 
   plugins.withId('groovy') {
@@ -139,5 +148,29 @@ subprojects { subprj ->
       // showSkippedStandardStreams true
       // showFailedStandardStreams true
     }
+  }
+  spotbugsMain {
+    reports {
+      html.enabled = true
+    }
+  }
+  spotbugs {
+    ignoreFailures = false
+    showStackTraces = true
+    showProgress = false
+    reportLevel = 'high'
+    reportLevel = 'default'
+    effort = 'max'
+    // visitors = [ 'FindSqlInjection', 'SwitchFallthrough' ]
+    // omitVisitors = [ 'FindNonShortCircuit' ]
+    // reportsDir = file("$buildDir/reports/spotbugs")
+    // includeFilter = file('spotbugs-include.xml')
+    excludeFilter = file("$rootDir/gradle/spotbugs-exclude.xml")
+    // onlyAnalyze = ['com.foobar.MyClass', 'com.foobar.mypkg.*']
+    // projectName = name
+    // release = version
+    // extraArgs = [ '-nested:false' ]
+    // jvmArgs = [ '-Duser.language=ja' ]
+    // maxHeapSize = '512m'
   }
 }

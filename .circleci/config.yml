@@ -1,0 +1,91 @@
+# circleCI build file
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: yakworks/builder:jdk8
+    resource_class: 'medium+'
+
+    steps:
+      - checkout
+
+      - run: make cache-key-file
+      - restore_cache: &gradle-cache-restore
+          key: gradle-{{ checksum "cache-key.tmp" }}
+
+      - run: make gradle.resolve-dependencies
+
+      - save_cache:
+          paths: [ "~/.m2", "~/.gradle" ]
+          key: gradle-{{ checksum "cache-key.tmp" }}
+
+      - run: make compile
+      - run:
+          name: ✔︎ -- Test
+          command: make check
+
+      # merge test results to store in circle
+      - run:
+          name: ✔︎ -- Merge Test Results
+          when: always
+          command: make merge-test-results
+
+      - store_test_results:
+          path: build/test-results/
+      - store_artifacts:
+          path: build/reports/
+          destination: /
+      - save_cache:
+          paths: [ ".gradle", "./build", "./spring/build" ]
+          key: build-{{ .Branch }}-{{ .Revision }}
+
+  ship-gh-pages:
+    docker:
+      - image: yakworks/docmark
+
+    steps:
+      - checkout
+      - restore_cache: &build-cache-restore
+          key: build-{{ .Branch }}-{{ .Revision }}
+      - run: make git.config-bot-user # configs the bot user for git
+      - run: make ship.gh-pages
+
+  ship-it:
+    docker:
+      - image: yakworks/builder:jdk8
+    resource_class: 'medium+'
+
+    steps:
+      - checkout
+      - run: make cache-key-file
+      - restore_cache: *gradle-cache-restore
+      - restore_cache:
+          key: build-{{ .Branch }}-{{ .Revision }}
+
+      # setup the docker
+      # - setup_remote_docker
+      # - run: apk add docker
+
+      # download vault and decrypts
+      - run: make vault.decrypt
+      # sets up git config, kubectl and docker login
+      - run: make ship.authorize
+      # publish libs, push docker, kubernetes deploy
+      - run: make ship.release
+      # add to changelog, creates a release to github, rolls version.props and pushes changes to github
+      # only happens if IS_RELEASABLE, meaning if its a snapshot then it skips this
+      - run: make ship.version
+
+workflows:
+  build-flow:
+    jobs:
+      - build:
+          context: bot-context #context with shared ENV vars
+      - ship-gh-pages:
+          context: bot-context
+          requires: [ build ]
+          filters: { branches: { only: [ master, /release\/.*/ ] } }
+      - ship-it:
+          context: bot-context
+          requires: [build]
+          filters: { branches: { only: [ master, /release\/.*/ ] } }

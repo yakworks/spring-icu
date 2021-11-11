@@ -1,5 +1,8 @@
 # Spring MessageSource ICU Support
 
+FORK info: This used to be a grails plugin, then a fork made it spring based and the yakworks
+fork is aimed at making it gorm
+
 Provides the [ICU4J](http://site.icu-project.org/) message formatting features, such as named arguments support, flexible plural formatting,
 rule based number format, date interval formats.
 

@@ -57,7 +57,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * Specify locale-independent common messages, with the message code as key
      * and the full message String (may contain argument placeholders) as value.
      * <p>May also link to an externally defined Properties object, e.g. defined
-     * through a {@link org.springframework.beans.factory.config.PropertiesFactoryBean}.
+     * through a org.springframework.beans.factory.config.PropertiesFactoryBean
      */
     public void setCommonMessages(@Nullable Properties commonMessages) {
         this.commonMessages = commonMessages;
@@ -85,8 +85,8 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      * to delegate to the internal {@link #getMessageInternal} method if available.
      * In general, it is recommended to just use "useCodeAsDefaultMessage" during
      * development and not rely on it in production in the first place, though.
+     * see org.springframework.validation.FieldError
      * @see #getMessage(String, Object[], Locale)
-     * @see org.springframework.validation.FieldError
      */
     public void setUseCodeAsDefaultMessage(boolean useCodeAsDefaultMessage) {
         this.useCodeAsDefaultMessage = useCodeAsDefaultMessage;
@@ -104,7 +104,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
         return this.useCodeAsDefaultMessage;
     }
 
-    @Override
+    @Override @SuppressWarnings("unchecked")
     public final String getMessage(String code, @Nullable Object[] args, @Nullable String defaultMessage, Locale locale) {
         if (isNamedArgumentsMapPresent(args)) {
             return getICUMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), defaultMessage, locale);
@@ -113,10 +113,11 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
         }
     }
 
-    @Override
+    @Override @SuppressWarnings("unchecked")
     public final String getMessage(String code, @Nullable Object[] args, Locale locale) throws NoSuchMessageException {
         if (isNamedArgumentsMapPresent(args)) {
-            return getICUMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), locale);
+            Map argMap = (Map<String, Object>)args[0];
+            return getICUMessage(code, new ICUMapMessageArguments(argMap), locale);
         } else {
             return getICUMessage(code, new ICUListMessageArguments(args), locale);
         }
