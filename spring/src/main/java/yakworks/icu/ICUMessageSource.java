@@ -1,4 +1,4 @@
-package com.transferwise.icu;
+package yakworks.icu;
 
 import org.springframework.context.HierarchicalMessageSource;
 import org.springframework.context.NoSuchMessageException;
@@ -40,4 +40,6 @@ public interface ICUMessageSource extends HierarchicalMessageSource {
      * @see java.text.MessageFormat
      */
     String getMessage(String code, Map<String, Object> args, Locale locale) throws NoSuchMessageException;
+
+
 }

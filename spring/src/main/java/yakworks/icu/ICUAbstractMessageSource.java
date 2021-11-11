@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-package com.transferwise.icu;
-
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
+package yakworks.icu;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
@@ -27,6 +23,9 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * ICU4j MessageFormat aware {@link org.springframework.context.support.AbstractMessageSource} drop-in
@@ -108,18 +107,18 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     @Override
     public final String getMessage(String code, @Nullable Object[] args, @Nullable String defaultMessage, Locale locale) {
         if (isNamedArgumentsMapPresent(args)) {
-            return getMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), defaultMessage, locale);
+            return getICUMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), defaultMessage, locale);
         } else {
-            return getMessage(code, new ICUListMessageArguments(args), defaultMessage, locale);
+            return getICUMessage(code, new ICUListMessageArguments(args), defaultMessage, locale);
         }
     }
 
     @Override
     public final String getMessage(String code, @Nullable Object[] args, Locale locale) throws NoSuchMessageException {
         if (isNamedArgumentsMapPresent(args)) {
-            return getMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), locale);
+            return getICUMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), locale);
         } else {
-            return getMessage(code, new ICUListMessageArguments(args), locale);
+            return getICUMessage(code, new ICUListMessageArguments(args), locale);
         }
     }
 
@@ -129,15 +128,15 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
 
     @Override
     public final String getMessage(String code, @Nullable Map<String, Object> args, @Nullable String defaultMessage, Locale locale) {
-        return getMessage(code, new ICUMapMessageArguments(args), defaultMessage, locale);
+        return getICUMessage(code, new ICUMapMessageArguments(args), defaultMessage, locale);
     }
 
     @Override
     public final String getMessage(String code, @Nullable Map<String, Object> args, Locale locale) throws NoSuchMessageException {
-        return getMessage(code, new ICUMapMessageArguments(args), locale);
+        return getICUMessage(code, new ICUMapMessageArguments(args), locale);
     }
 
-    public final String getMessage(String code, ICUMessageArguments args, @Nullable String defaultMessage, Locale locale) {
+    public final String getICUMessage(String code, ICUMessageArguments args, @Nullable String defaultMessage, Locale locale) {
         String msg = getMessageInternal(code, args, locale);
         if (msg != null) {
             return msg;
@@ -148,7 +147,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
         return renderDefaultMessage(defaultMessage, args, locale);
     }
 
-    public final String getMessage(String code, ICUMessageArguments args, Locale locale) throws NoSuchMessageException {
+    public final String getICUMessage(String code, ICUMessageArguments args, Locale locale) throws NoSuchMessageException {
         String msg = getMessageInternal(code, args, locale);
         if (msg != null) {
             return msg;
@@ -199,9 +198,9 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
         if (code == null) {
             return null;
         }
-        if (locale == null) {
-            locale = Locale.getDefault();
-        }
+
+        locale = checkLocale(locale);
+
         ICUMessageArguments argsToUse = args;
 
         if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(args)) {
@@ -253,6 +252,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
      */
     @Nullable
     protected String getMessageFromParent(String code, ICUMessageArguments args, Locale locale) {
+        locale = checkLocale(locale);
         MessageSource parent = getParentMessageSource();
         if (parent != null) {
             if (parent instanceof ICUAbstractMessageSource) {
