@@ -39,7 +39,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     @Nullable
     private Properties commonMessages;
 
-    private boolean useCodeAsDefaultMessage = false;
+    private boolean useCodeAsDefaultMessage = true;
 
 
     @Override
@@ -107,7 +107,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     @Override @SuppressWarnings("unchecked")
     public final String getMessage(String code, @Nullable Object[] args, @Nullable String defaultMessage, Locale locale) {
         if (isNamedArgumentsMapPresent(args)) {
-            return getICUMessage(code, new ICUMapMessageArguments((Map<String, Object>)args[0]), defaultMessage, locale);
+            return getICUMessage(code, new ICUMapMessageArguments((Map)args[0]), defaultMessage, locale);
         } else {
             return getICUMessage(code, new ICUListMessageArguments(args), defaultMessage, locale);
         }
@@ -128,15 +128,19 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
     }
 
     @Override
-    public final String getMessage(String code, @Nullable Map<String, Object> args, @Nullable String defaultMessage, Locale locale) {
+    public final String getMessage(String code, @Nullable Map args, @Nullable String defaultMessage, Locale locale) {
         return getICUMessage(code, new ICUMapMessageArguments(args), defaultMessage, locale);
     }
 
     @Override
-    public final String getMessage(String code, @Nullable Map<String, Object> args, Locale locale) throws NoSuchMessageException {
-        return getICUMessage(code, new ICUMapMessageArguments(args), locale);
+    public final String getMessage(String code, @Nullable Map args, Locale locale) {
+        return getICUMessage(code, new ICUMapMessageArguments(args), null, locale);
     }
 
+    /**
+     * used for new map based methods and calls with a defaultMessage.
+     * defaultMessage can be null and will use the code itself as a message.
+     */
     public final String getICUMessage(String code, ICUMessageArguments args, @Nullable String defaultMessage, Locale locale) {
         String msg = getMessageInternal(code, args, locale);
         if (msg != null) {
@@ -148,7 +152,11 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
         return renderDefaultMessage(defaultMessage, args, locale);
     }
 
+    /**
+     * Used for legacy
+     */
     public final String getICUMessage(String code, ICUMessageArguments args, Locale locale) throws NoSuchMessageException {
+        locale = checkLocale(locale);
         String msg = getMessageInternal(code, args, locale);
         if (msg != null) {
             return msg;
@@ -158,6 +166,11 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
             return fallback;
         }
         throw new NoSuchMessageException(code, locale);
+    }
+
+    @Override
+    public final String getMessage(ICUMessageSourceResolvable resolvable, Locale locale) throws NoSuchMessageException {
+        return getMessage(resolvable.getCode(), resolvable.getParams(), locale);
     }
 
     @Override
@@ -204,7 +217,7 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
 
         ICUMessageArguments argsToUse = args;
 
-        if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(args)) {
+        if (!isAlwaysUseMessageFormat() && args.isEmpty()) {
             // Optimized resolution: no arguments to apply,
             // therefore no MessageFormat needs to be involved.
             // Note that the default implementation still uses MessageFormat;
@@ -214,7 +227,6 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
                 return message;
             }
         }
-
         else {
             // Resolve arguments eagerly, for the case where the message
             // is defined in a parent MessageSource but resolvable arguments
@@ -310,10 +322,17 @@ public abstract class ICUAbstractMessageSource extends ICUMessageSourceSupport i
         return (!ObjectUtils.isEmpty(codes) ? getDefaultMessage(codes[0]) : null);
     }
 
+    protected String getDefaultMessageFromArgs(Map argMap) {
+        if (argMap.containsKey("defaultMessage")) {
+            return argMap.get("defaultMessage").toString();
+        }
+        return null;
+    }
+
     /**
      * Return a fallback default message for the given code, if any.
      * <p>Default is to return the code itself if "useCodeAsDefaultMessage" is activated,
-     * or return no fallback else. In case of no fallback, the caller will usually
+     * or return null. In case of no fallback, the caller will usually
      * receive a {@code NoSuchMessageException} from {@code getMessage}.
      * @param code the message code that we couldn't resolve
      * and that we didn't receive an explicit default message for

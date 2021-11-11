@@ -1,2 +1,35 @@
-apply plugin: 'java'
+apply plugin: "com.github.spotbugs"
 apply plugin: "yakworks.groovy-lib"
+
+dependencies {
+  compileOnly('org.springframework:spring-context:5.2.5.RELEASE') {
+    exclude group: 'commons-logging', module: 'commons-logging'
+  }
+  api 'com.ibm.icu:icu4j:70.1'
+
+  testImplementation "org.slf4j:slf4j-simple:1.7.30"
+}
+
+spotbugsMain {
+  reports {
+    html.enabled = true
+  }
+}
+spotbugs {
+  ignoreFailures = false
+  showStackTraces = true
+  showProgress = false
+  reportLevel = 'high'
+  effort = 'max'
+  // visitors = [ 'FindSqlInjection', 'SwitchFallthrough' ]
+  // omitVisitors = [ 'FindNonShortCircuit' ]
+  // reportsDir = file("$buildDir/reports/spotbugs")
+  // includeFilter = file('spotbugs-include.xml')
+  excludeFilter = file("$rootDir/gradle/spotbugs-exclude.xml")
+  // onlyAnalyze = ['com.foobar.MyClass', 'com.foobar.mypkg.*']
+  // projectName = name
+  // release = version
+  // extraArgs = [ '-nested:false' ]
+  // jvmArgs = [ '-Duser.language=ja' ]
+  // maxHeapSize = '512m'
+}

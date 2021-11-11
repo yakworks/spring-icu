@@ -1,24 +1,22 @@
 package yakworks.icu
 
-import spock.lang.Specification;
-
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.stream.Stream
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
 
-class ICUMessageSourceSpec extends Specification  {
+import grails.testing.mixin.integration.Integration
+import spock.lang.Specification
 
-    private ICUMessageSource messageSource
+// Use as a simple to test when trying to see why application context has problem on init
+@Integration
+class SanityCheckSpec extends Specification {
 
-    void setup() {
-        RicuMessageSource messageSource = new RicuMessageSource()
-        messageSource.setDefaultEncoding("UTF-8")
-        messageSource.setBasename("messages")
-        this.messageSource = messageSource
+    ICUMessageSource messageSource
+
+    void "WTF"() {
+        expect:
+        messageSource
+        '1' == "1".toString()
     }
 
     void "locales should get transaled"() {
@@ -50,13 +48,6 @@ class ICUMessageSourceSpec extends Specification  {
         expect:
         String msg = messageSource.getMessage("unnamed.arguments", ["confidential.pdf"] as Object[], Locale.ENGLISH);
         "Attachment confidential.pdf saved" == msg
-    }
-
-    private static Stream<Arguments> pluralsArgs() {
-        return Stream.of(
-                Arguments.of(1, "Message"),
-                Arguments.of(2, "Messages")
-        );
     }
 
     void "should pick up plurals"() {
@@ -122,16 +113,15 @@ class ICUMessageSourceSpec extends Specification  {
         "You're using 90% of your quota" == msg
     }
 
-    @Test
     void testDates() {
         when:
         Map<String, Object> args = new HashMap<>();
 
         java.util.Date date = Date.from(
-                LocalDate.of(1970, 1, 1)
-                        .atStartOfDay()
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant()
+            LocalDate.of(1970, 1, 1)
+                .atStartOfDay()
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
         );
 
         args.put("epoch", date);
@@ -172,5 +162,6 @@ class ICUMessageSourceSpec extends Specification  {
         Object[] args = null;
         "Refresh inbox" == messageSource.getMessage("simple", args as Object[], "default", Locale.ENGLISH);
     }
+
 
 }
