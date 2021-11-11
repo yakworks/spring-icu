@@ -1,4 +1,4 @@
-package com.transferwise.icu;
+package yakworks.icu;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,6 +9,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
+import yakworks.icu.ICUReloadableResourceBundleMessageSource;
 
 import java.util.HashMap;
 import java.util.Locale;
