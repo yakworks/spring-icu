@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.transferwise.icu;
+package yakworks.icu;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.ibm.icu.text.MessageFormat;
+import org.springframework.context.MessageSource;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
@@ -204,8 +205,9 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
             for (int j = filenames.size() - 1; j >= 0; j--) {
                 String filename = filenames.get(j);
                 PropertiesHolder propHolder = getProperties(filename);
-                if (propHolder.getProperties() != null) {
-                    mergedProps.putAll(propHolder.getProperties());
+                Properties props = propHolder.getProperties();
+                if (props != null) {
+                    mergedProps.putAll(props);
                     if (propHolder.getFileTimestamp() > latestTimestamp) {
                         latestTimestamp = propHolder.getFileTimestamp();
                     }
@@ -493,8 +495,9 @@ public class ICUReloadableResourceBundleMessageSource extends ICUAbstractResourc
      */
     public void clearCacheIncludingAncestors() {
         clearCache();
-        if (getParentMessageSource() instanceof ICUReloadableResourceBundleMessageSource) {
-            ((ICUReloadableResourceBundleMessageSource) getParentMessageSource()).clearCacheIncludingAncestors();
+        MessageSource parentms = getParentMessageSource();
+        if (parentms != null && getParentMessageSource() instanceof ICUReloadableResourceBundleMessageSource) {
+            ((ICUReloadableResourceBundleMessageSource) parentms).clearCacheIncludingAncestors();
         }
     }
 

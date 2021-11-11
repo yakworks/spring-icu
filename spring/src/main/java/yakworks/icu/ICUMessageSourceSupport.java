@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.transferwise.icu;
+package yakworks.icu;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -45,6 +46,12 @@ public abstract class ICUMessageSourceSupport {
      */
     private final Map<String, Map<Locale, com.ibm.icu.text.MessageFormat>> messageFormatsPerMessage = new HashMap<>();
 
+    /**
+     * If locale is null then uses LocaleContextHolder.getLocale()
+     */
+    Locale checkLocale(Locale locale) {
+        return (locale != null ? locale : LocaleContextHolder.getLocale());
+    }
 
     /**
      * Set whether to always apply the {@code MessageFormat} rules,
@@ -102,6 +109,7 @@ public abstract class ICUMessageSourceSupport {
      * @return the formatted message (with resolved arguments)
      */
     protected String formatMessage(String msg, ICUMessageArguments args, Locale locale) {
+        locale = checkLocale(locale);
         if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(args)) {
             return msg;
         }

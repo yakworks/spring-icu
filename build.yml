@@ -1,0 +1,42 @@
+# used in the build.sh as well as gradle
+title: Spring and Grails for ICU4J
+description: Lib for messageSource on spring and grails
+author: Yak.Works
+
+project:
+  # this is needed for url in pom for jar lib, wont pick up defaults from git
+  fullName: yakworks/gorm-tools
+  # list of subproject dirs used to spin through, build the checksum and consolidate the test reports for circle
+  subprojects: spring grails
+
+bot:
+  email: 9cibot@9ci.com
+  user: 9cibot2
+
+vault_url: https://github.com/9ci/vault.git
+
+version:
+  # after release, will set version.properties back to snapshot=true
+  set_snapshot: true
+
+release:
+  changelog: CHANGELOG.md
+  branch_regex: master|release/.+
+
+team:
+  developers: ['basejump: Joshua Burnett']
+
+maven:
+  # publish lib here too as well as maven central on release
+  repoUrl: http://repo.9ci.com/public-libs
+  # snapshots go here
+  snapshotUrl: http://repo.9ci.com/oss-snapshots
+
+codenarc:
+  main:
+    excludes: ['**/BootStrap.*', '**/UrlMappings.*']
+
+spotless:
+  groovy:
+    excludes:
+      - '**/conf/**/*.groovy'

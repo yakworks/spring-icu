@@ -1,4 +1,4 @@
-package com.transferwise.icu;
+package yakworks.icu;
 
 import com.ibm.icu.text.MessageFormat;
 import org.springframework.lang.Nullable;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.transferwise.icu;
+package yakworks.icu;
 
 import java.util.LinkedHashSet;
 import java.util.Locale;
