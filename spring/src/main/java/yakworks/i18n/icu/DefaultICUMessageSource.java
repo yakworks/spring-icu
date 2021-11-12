@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-package yakworks.icu;
+package yakworks.i18n.icu;
 
-import com.ibm.icu.text.MessageFormat;
 import org.springframework.context.MessageSourceResolvable;
-import org.springframework.context.NoSuchMessageException;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
@@ -33,54 +29,50 @@ import java.util.Properties;
  * ICU4j Overrides, Lost of copy paste as so much in ReloadableResourceBundleMessageSource is
  * private and final. The core issue here is that we need to return com.ibm.icu.text.MessageFormat and not java.text.MessageFormat
  * from many of the methods and so can't easily override
+ * basically overrides what we need from {@link org.springframework.context.support.MessageSourceSupport} and
+ * {@link org.springframework.context.support.AbstractMessageSource}
+ *
+ *  @author Joshua Burnett (@basejump)
+ *  @since 0.3.0
  */
 @SuppressWarnings("unchecked")
 public class DefaultICUMessageSource extends ICUBundleMessageSource implements ICUMessageSource {
 
-    private static final com.ibm.icu.text.MessageFormat INVALID_MESSAGE_FORMAT = new com.ibm.icu.text.MessageFormat("");
+    public static final com.ibm.icu.text.MessageFormat INVALID_MESSAGE_FORMAT = new com.ibm.icu.text.MessageFormat("");
 
     private final Map<String, Map<Locale, com.ibm.icu.text.MessageFormat>> messageFormatsPerMessage = new HashMap<>();
 
-    /**
-     * If locale is null then uses LocaleContextHolder.getLocale()
-     */
-    Locale checkLocale(Locale locale) {
-        return (locale != null ? locale : LocaleContextHolder.getLocale());
+    public DefaultICUMessageSource(){
+        //set defaults
+        setBasename("classpath:messages");
+        setDefaultEncoding("UTF-8");
     }
 
-    boolean isNamedArgumentsMapPresent(@Nullable Object... args) {
-        return args != null && args.length == 1 && args[0] instanceof Map;
-    }
-
-    ICUMessageArgs getICUArgs(Object[] args){
-        if (isNamedArgumentsMapPresent(args)) {
-            return new MapMessageArgs((Map)args[0]);
-        } else {
-            return new ListMessageArgs(args);
-        }
-    }
-
-    @Override
+    @Override //MessageSourceSupport
     protected String renderDefaultMessage(String defaultMessage, @Nullable Object[] args, Locale locale) {
-        return formatMessage(defaultMessage, getICUArgs(args), locale);
+        return formatMessage(defaultMessage, ICUArgsHolder.of(args), locale);
     }
 
-    @Override
+    //should never get hit now with overrides so throw UnsupportedOperationException just in case
+    @Override //MessageSourceSupport
     protected String formatMessage(String msg, @Nullable Object[] args, Locale locale) {
         throw new UnsupportedOperationException("Use formatMessage with ICUMessageArguments");
     }
 
-    /**
-     * Format the given message String, using cached MessageFormats.
-     * By default invoked for passed-in default messages, to resolve
-     * any argument placeholders found in them.
-     * @param msg the message to format
-     * @param args array of arguments that will be filled in for params within
-     * the message, or {@code null} if none
-     * @param locale the Locale used for formatting
-     * @return the formatted message (with resolved arguments)
-     */
-    protected String formatMessage(String msg, ICUMessageArgs args, Locale locale) {
+    //should never get hit now with overrides so throw UnsupportedOperationException just in case we missed something
+    @Override // AbstractMessageSource
+    protected Object[] resolveArguments(@Nullable Object[] args, Locale locale) {
+        throw new UnsupportedOperationException("caller methods should have been overriden");
+    }
+
+    // overrides to always pull from LocaleContextHolder.getLocale()
+    @Nullable
+    @Override // AbstractResourceBasedMessageSource
+    protected Locale getDefaultLocale() {
+        return getHolderLocale();
+    }
+
+    protected String formatMessage(String msg, ICUArgsHolder args, Locale locale) {
         locale = checkLocale(locale);
         if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(args)) {
             return msg;
@@ -119,51 +111,43 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
         }
     }
 
-    @Override
-    public String getMessage(String code, @Nullable Map args, @Nullable String defaultMessage, Locale locale) {
-        return getICUMessage(code, new MapMessageArgs(args), defaultMessage, locale);
-    }
-
-    @Override
-    public String getMessage(String code, @Nullable Map args, Locale locale) {
-        return getICUMessage(code, new MapMessageArgs(args), null, locale);
-    }
-
-    @Override
-    public final String getMessage(ICUMessageSourceResolvable resolvable, Locale locale) throws NoSuchMessageException {
-        return getMessage(resolvable.getCode(), resolvable.getParams(), null, locale);
-    }
-
     /**
      * used for new map based methods and calls with a defaultMessage.
      * defaultMessage can be null and will use the code itself as a message.
      */
-    public final String getICUMessage(String code, ICUMessageArgs args, @Nullable String defaultMessage, Locale locale) {
+    @Override //ICUMessageSource
+    public String getICUMessage(String code, ICUArgsHolder args, @Nullable String defaultMessage, Locale locale) {
         String msg = getMessageInternal(code, args, locale);
         if (msg != null) {
             return msg;
         }
         if (defaultMessage == null) {
-            return getDefaultMessage(code);
+            //see if key exists in args
+            if(args.getDefaultMessage() != null){
+                return formatMessage(args.getDefaultMessage(), args, locale);
+            } else {
+                return getDefaultMessage(code);
+            }
+
         }
         return formatMessage(defaultMessage, args, locale);
     }
 
-    @Override
+    @Override //AbstractMessageSource
     @Nullable
     protected String getMessageInternal(@Nullable String code, @Nullable Object[] args, @Nullable Locale locale) {
-        return getMessageInternal(code, getICUArgs(args), locale);
+        return getMessageInternal(code, ICUArgsHolder.of(args), locale);
     }
 
     @Nullable
-    protected String getMessageInternal(@Nullable String code, ICUMessageArgs args, @Nullable Locale locale) {
+    protected String getMessageInternal(@Nullable String code, ICUArgsHolder args, @Nullable Locale locale) {
         if (code == null) {
             return null;
         }
 
         locale = checkLocale(locale);
 
-        ICUMessageArgs argsToUse = args;
+        ICUArgsHolder argsToUse = args;
 
         if (!isAlwaysUseMessageFormat() && args.isEmpty()) {
             // Optimized resolution: no arguments to apply,
@@ -198,18 +182,16 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
             }
         }
 
-        // Not found -> check parent, if any.
+        // TODO Not implemented yet Not found -> check parent, if any.
+        // return getMessageFromParent(code, argsToUse, locale);
         return null;
     }
 
-    protected ICUMessageArgs resolveArguments(ICUMessageArgs args, Locale locale) {
-        return args.transform(new ICUMessageArgs.Transformation() {
-            @Override
-            public Object transform(Object item) {
-                if (item instanceof MessageSourceResolvable)
-                    return getMessage((MessageSourceResolvable) item, locale);
-                return item;
-            }
+    protected ICUArgsHolder resolveArguments(ICUArgsHolder args, Locale locale) {
+        return args.transform( item -> {
+            if (item instanceof MessageSourceResolvable)
+                return getMessage((MessageSourceResolvable) item, locale);
+            return item;
         });
     }
 

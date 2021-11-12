@@ -1,15 +1,14 @@
 /*
-* Copyright 2019 Yak.Works - Licensed under the Apache License, Version 2.0 (the "License")
+* Copyright 2021 Yak.Works - Licensed under the Apache License, Version 2.0 (the "License")
 * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 */
-package yakworks.icu
+package yakworks.i18n.icu
 
 import groovy.transform.CompileStatic
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
-import org.springframework.context.MessageSource
 import org.springframework.context.MessageSourceResolvable
 import org.springframework.context.NoSuchMessageException
 import org.springframework.context.i18n.LocaleContextHolder
@@ -26,7 +25,7 @@ import org.springframework.context.i18n.LocaleContextHolder
  * @since 6.1.11-v6
  */
 @CompileStatic
-class MsgService implements ApplicationContextAware{
+class MsgService implements ApplicationContextAware {
 
     public static ApplicationContext appCtx
 
@@ -57,7 +56,7 @@ class MsgService implements ApplicationContextAware{
      * @return the message
      */
     String getMessage(String code, String defaultMessage) {
-        return this.messageSource.getMessage(code, null, defaultMessage, getDefaultLocale());
+        return messageSource.getMessage(code, [], defaultMessage, getDefaultLocale());
     }
 
 
@@ -69,7 +68,7 @@ class MsgService implements ApplicationContextAware{
      * @return the message
      */
     String getMessage(String code, List args, String defaultMessage) {
-        return this.messageSource.getMessage(code, args as Object[], defaultMessage, getDefaultLocale());
+        return messageSource.getMessage(code, args as Object[], defaultMessage, getDefaultLocale());
     }
 
     /**
@@ -79,7 +78,7 @@ class MsgService implements ApplicationContextAware{
      * @throws org.springframework.context.NoSuchMessageException if not found
      */
     String getMessage(String code) throws NoSuchMessageException {
-        return this.messageSource.getMessage(code, null, getDefaultLocale());
+        return messageSource.getMessage(code, getDefaultLocale());
     }
 
     /**
@@ -90,7 +89,7 @@ class MsgService implements ApplicationContextAware{
      * @throws org.springframework.context.NoSuchMessageException if not found
      */
     String getMessage(String code, List args) throws NoSuchMessageException {
-        return this.messageSource.getMessage(code, args as Object[], getDefaultLocale());
+        return messageSource.getMessage(code, args as Object[], getDefaultLocale());
     }
 
     /**
@@ -101,7 +100,7 @@ class MsgService implements ApplicationContextAware{
      * @throws org.springframework.context.NoSuchMessageException if not found
      */
     String getMessage(MessageSourceResolvable resolvable) throws NoSuchMessageException {
-        return this.messageSource.getMessage(resolvable, getDefaultLocale());
+        return messageSource.getMessage(resolvable, getDefaultLocale());
     }
 
     /**

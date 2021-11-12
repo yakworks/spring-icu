@@ -1,4 +1,5 @@
-package yakworks.icu
+package yakworks.i18n.icu
+
 
 import spock.lang.Specification;
 
@@ -8,12 +9,12 @@ import java.util.stream.Stream
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.provider.Arguments
 
-class ICUMessageSourceSpec extends Specification  {
+class KitchenSinkSpec extends Specification  {
 
     private ICUMessageSource messageSource
 
     void setup() {
-        DefaultICUMessageSource messageSource = new DefaultICUMessageSource()
+        ICUMessageSource messageSource = new DefaultICUMessageSource()
         messageSource.defaultEncoding = "UTF-8"
         messageSource.basename = "messages"
         messageSource.useCodeAsDefaultMessage = true
@@ -166,7 +167,7 @@ class ICUMessageSourceSpec extends Specification  {
         "default" == messageSource.getMessage("nonexistent.message", args, "default", null);
     }
 
-    void "null args and null locale should work"() {
+    void "null args and null 3rd arg(locale or defMsg) should work"() {
         expect:
         Object[] args = null;
         "Refresh inbox" == messageSource.getMessage("simple", null, null);

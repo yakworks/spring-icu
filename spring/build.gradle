@@ -6,7 +6,7 @@ dependencies {
     exclude group: 'commons-logging', module: 'commons-logging'
   }
   api 'com.ibm.icu:icu4j:70.1'
-
+  api project(":i18n")
   testImplementation "org.slf4j:slf4j-simple:1.7.30"
 }
 
