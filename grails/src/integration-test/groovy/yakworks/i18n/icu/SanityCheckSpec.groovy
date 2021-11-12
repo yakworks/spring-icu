@@ -3,6 +3,8 @@ package yakworks.i18n.icu
 import java.time.LocalDate
 import java.time.ZoneId
 
+import org.springframework.beans.factory.annotation.Autowired
+
 import grails.testing.mixin.integration.Integration
 import spock.lang.Specification
 
@@ -10,6 +12,7 @@ import spock.lang.Specification
 @Integration
 class SanityCheckSpec extends Specification {
 
+    @Autowired
     ICUMessageSource messageSource
 
     void "WTF"() {

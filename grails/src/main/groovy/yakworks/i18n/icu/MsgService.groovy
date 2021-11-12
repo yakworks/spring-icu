@@ -24,6 +24,7 @@ import org.springframework.context.i18n.LocaleContextHolder
  *
  * @since 6.1.11-v6
  */
+@SuppressWarnings('AssignmentToStaticFieldFromInstanceMethod')
 @CompileStatic
 class MsgService implements ApplicationContextAware {
 

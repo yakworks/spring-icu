@@ -95,6 +95,10 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
         return null;
     }
 
+    protected void mergePluginProperties(final Locale locale, Properties mergedProps) {
+        //empty, can be overridden for loading defualts first
+    }
+
     @Override
     protected PropertiesHolder getMergedProperties(Locale locale) {
         PropertiesHolder mergedHolder = this.cachedMergedProperties.get(locale);
@@ -103,6 +107,9 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
         }
 
         Properties mergedProps = newProperties();
+        //this method does nothing here but is called for users to override. for example in grails we want to merge plugins first
+        mergePluginProperties(locale, mergedProps);
+
         long latestTimestamp = -1;
         String[] basenames = StringUtils.toStringArray(getBasenameSet());
         for (int i = basenames.length - 1; i >= 0; i--) {
@@ -171,7 +178,7 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
         }
     }
 
-    protected PropertiesHolder refreshPropertiesICU(String filename, @Nullable PropertiesHolder propHolder) {
+    public PropertiesHolder refreshPropertiesICU(String filename, @Nullable PropertiesHolder propHolder) {
         long refreshTimestamp = (getCacheMillis() < 0 ? -1 : System.currentTimeMillis());
 
         Resource resource = this.resourceLoader.getResource(filename + PROPERTIES_SUFFIX);

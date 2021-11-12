@@ -10,10 +10,16 @@ class Icu4jGrailsPlugin extends grails.plugins.Plugin {
     def loadAfter = ['i18n']
 
     Closure doWithSpring() { {->
-        messageSource(DefaultICUMessageSource) {
-            // basename = "classpath:messages"
-            // defaultEncoding = "UTF-8"
-            // useCodeAsDefaultMessage = true
+
+        // GrailsApplication application = grailsApplication
+
+        messageSource(GrailsICUMessageSource, grailsApplication, pluginManager) {
+            // fallbackToSystemLocale = false
         }
+        // messageSource(DefaultICUMessageSource) {
+        //     // basename = "classpath:messages"
+        //     // defaultEncoding = "UTF-8"
+        //     // useCodeAsDefaultMessage = true
+        // }
     }}
 }
