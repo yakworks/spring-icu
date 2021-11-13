@@ -11,28 +11,28 @@ class MsgKeySpec extends Specification  {
         then: 'should have set it up'
         msgKey instanceof DefaultMsgKey
         msgKey.code == 'named.arguments'
-        msgKey.params == null
+        msgKey.args == null
 
         when: 'def msg is set'
         msgKey.defaultMessage("go go go")
 
         then: 'args should have been setup'
-        msgKey.params['defaultMessage'] == 'go go go'
+        msgKey.args['defaultMessage'] == 'go go go'
     }
 
     void 'check builder 2'() {
         when: "of static is called on ICUMsgKey"
-        MsgKey msgKey = MsgKey.of('named.arguments', [name: 'foo'])
+        MsgKey msgKey = MsgKey.of('named.arguments').args([name: 'foo'])
 
         then: 'should have set it up'
         msgKey.code == 'named.arguments'
-        msgKey.params == [name:'foo']
+        msgKey.args == [name:'foo']
 
         when: 'def msg is set'
         msgKey.defaultMessage("go")
 
         then: 'args should have been setup'
-        msgKey.params == [name:'foo', defaultMessage: 'go']
+        msgKey.args == [name:'foo', defaultMessage: 'go']
     }
 
 }

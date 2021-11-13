@@ -110,11 +110,11 @@ public interface ICUMessageSource extends HierarchicalMessageSource {
      */
     @Nullable
     default String getMessage(MsgKey msgKey, Locale locale) {
-        return getMessage(msgKey.getCode(), msgKey.getParams(), null, locale);
+        return getMessage(msgKey.getCode(), msgKey.getArgs(), null, locale);
     }
 
     default String getMessage(MsgKey msgKey) {
-        return getMessage(msgKey.getCode(), msgKey.getParams(), null, checkLocale(null));
+        return getMessage(msgKey.getCode(), msgKey.getArgs(), null, checkLocale(null));
     }
 
     /**

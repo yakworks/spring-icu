@@ -21,33 +21,33 @@ class MsgKeySpec extends Specification  {
         then: 'should have set it up'
         msgKey instanceof DefaultMsgKey
         msgKey.code == 'named.arguments'
-        msgKey.params == null
+        msgKey.args == null
 
         when: 'def msg is set'
         msgKey.defaultMessage("go go go")
 
         then: 'args should have been setup'
-        msgKey.params['defaultMessage'] == 'go go go'
+        msgKey.args['defaultMessage'] == 'go go go'
     }
 
     void 'check builder 2'() {
         when: "of static is called on ICUMsgKey"
-        MsgKey msgKey = MsgKey.of('named.arguments', [name: 'foo'])
+        MsgKey msgKey = MsgKey.of('named.arguments').args([name: 'foo'])
 
         then: 'should have set it up'
         msgKey.code == 'named.arguments'
-        msgKey.params == [name:'foo']
+        msgKey.args == [name:'foo']
 
         when: 'def msg is set'
         msgKey.defaultMessage("go")
 
         then: 'args should have been setup'
-        msgKey.params == [name:'foo', defaultMessage: 'go']
+        msgKey.args == [name:'foo', defaultMessage: 'go']
     }
 
     void 'maps for named arguments'() {
         when:
-        MsgKey msgKey = MsgKey.of('named.arguments', [name: 'foo'])
+        MsgKey msgKey = MsgKey.of('named.arguments').args([name: 'foo'])
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -87,7 +87,7 @@ class MsgKeySpec extends Specification  {
 
     void 'when default has named args'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco']).defaultMessage("have a {name} 🌮")
+        MsgKey msgKey = MsgKey.of('nonexistent').args([name: 'taco']).defaultMessage("have a {name} 🌮")
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -97,7 +97,7 @@ class MsgKeySpec extends Specification  {
 
     void 'when args have an emoji'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco 🌮']).defaultMessage("have a {name}")
+        MsgKey msgKey = MsgKey.of('nonexistent').args([name: 'taco 🌮']).defaultMessage("have a {name}")
 
         String msg = messageSource.getMessage(msgKey)
 

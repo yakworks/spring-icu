@@ -26,7 +26,7 @@ public interface MsgKey {
      * A default message can also be in the map params as a 'defaultMessage' key.
      */
     @Nullable
-    default Map getParams() {
+    default Map getArgs() {
         return null;
     }
 
@@ -35,20 +35,6 @@ public interface MsgKey {
      */
     static DefaultMsgKey of(String code){
         return new DefaultMsgKey(code);
-    }
-
-    /**
-     * Make key form code and args
-     */
-    static DefaultMsgKey of(String code, Map args){
-        return new DefaultMsgKey(code).params(args);
-    }
-
-    /**
-     * Make key form code and args
-     */
-    static DefaultMsgKey ofDefault(Map args, String defaultMessage){
-        return new DefaultMsgKey("__nonexistent__").params(args);
     }
 
 }

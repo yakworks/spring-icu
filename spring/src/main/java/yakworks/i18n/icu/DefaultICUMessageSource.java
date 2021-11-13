@@ -67,7 +67,7 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
 
     // overrides to always pull from LocaleContextHolder.getLocale()
     @Nullable
-    @Override // AbstractResourceBasedMessageSource
+    // @Override // AbstractResourceBasedMessageSource FIXME when going to spring 5.2 change this to override
     protected Locale getDefaultLocale() {
         return getHolderLocale();
     }

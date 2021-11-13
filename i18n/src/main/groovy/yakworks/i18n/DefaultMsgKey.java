@@ -14,7 +14,7 @@ import java.util.Map;
 public class DefaultMsgKey implements MsgKey {
 
     private final String code;
-    private Map params;
+    private Map args;
 
     public DefaultMsgKey(String code) { this.code = code; }
 
@@ -22,21 +22,15 @@ public class DefaultMsgKey implements MsgKey {
     public String getCode() { return code; }
 
     @Override
-    public Map getParams() { return params; }
+    public Map getArgs() { return args; }
+    public void setArgs(Map v) { args = v; }
 
-    void setParams(Map v) { params = v;}
-
-    DefaultMsgKey params(Map v) { params = v; return this;}
+    DefaultMsgKey args(Map v) { args = v; return this;}
 
     /**
      * sets the defaultMessage key in the map, creates an arg map if none exists
-     * @param defMsg
-     * @return
      */
     DefaultMsgKey defaultMessage(String defMsg) {
-        if(params == null) params = new LinkedHashMap<>();
-        params.put("defaultMessage", defMsg);
-        return this;
+        return (DefaultMsgKey)MsgKeyUtils.defaultMessage(this, defMsg);
     }
-
 }
