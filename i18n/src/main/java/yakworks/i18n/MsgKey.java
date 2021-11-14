@@ -1,6 +1,7 @@
 package yakworks.i18n;
 
 import javax.annotation.Nullable;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -17,9 +18,12 @@ import java.util.Map;
  *  @author Joshua Burnett (@basejump)
  *  @since 0.3.0
  */
-public interface MsgKey {
+@SuppressWarnings("unchecked")
+public interface MsgKey<E> {
 
     String getCode();
+    default void setCode(String code){ }
+    default E code(String code){ setCode(code); return (E)this;}
 
     /**
      * Return the Map of arguments to be used to resolve this message as ICU.
@@ -29,7 +33,18 @@ public interface MsgKey {
     default Map getArgs() {
         return null;
     }
+    default void setArgs(Map args){ }
+    default E args(Map args){ setArgs(args); return (E)this;}
 
+    default E fallbackMessage(String defMsg) {
+        if(defMsg != null) {
+            if (getArgs() == null) {
+                setArgs(new LinkedHashMap<>());
+            }
+            getArgs().put("defaultMessage", defMsg);
+        }
+        return (E)this;
+    }
     /**
      * Make key form code
      */

@@ -1,13 +1,10 @@
 package yakworks.i18n.icu
 
-
 import spock.lang.Specification;
 
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.stream.Stream
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.provider.Arguments
 
 import yakworks.i18n.MsgContext
 import yakworks.i18n.MsgKey
@@ -57,12 +54,6 @@ class KitchenSinkSpec extends Specification  {
         "Attachment confidential.pdf saved" == msg
     }
 
-    private static Stream<Arguments> pluralsArgs() {
-        return Stream.of(
-                Arguments.of(1, "Message"),
-                Arguments.of(2, "Messages")
-        );
-    }
 
     void "should pick up plurals"() {
         expect:
@@ -127,7 +118,6 @@ class KitchenSinkSpec extends Specification  {
         "You're using 90% of your quota" == msg
     }
 
-    @Test
     void testDates() {
         when:
         Map<String, Object> args = new HashMap<>();

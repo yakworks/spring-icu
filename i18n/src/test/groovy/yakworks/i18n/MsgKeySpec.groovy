@@ -14,7 +14,7 @@ class MsgKeySpec extends Specification  {
         msgKey.args == null
 
         when: 'def msg is set'
-        msgKey.defaultMessage("go go go")
+        msgKey.fallbackMessage("go go go")
 
         then: 'args should have been setup'
         msgKey.args['defaultMessage'] == 'go go go'
@@ -29,7 +29,7 @@ class MsgKeySpec extends Specification  {
         msgKey.args == [name:'foo']
 
         when: 'def msg is set'
-        msgKey.defaultMessage("go")
+        msgKey.fallbackMessage("go")
 
         then: 'args should have been setup'
         msgKey.args == [name:'foo', defaultMessage: 'go']

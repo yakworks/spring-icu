@@ -24,7 +24,7 @@ class MsgKeySpec extends Specification  {
         msgKey.args == null
 
         when: 'def msg is set'
-        msgKey.defaultMessage("go go go")
+        msgKey.fallbackMessage("go go go")
 
         then: 'args should have been setup'
         msgKey.args['defaultMessage'] == 'go go go'
@@ -39,7 +39,7 @@ class MsgKeySpec extends Specification  {
         msgKey.args == [name:'foo']
 
         when: 'def msg is set'
-        msgKey.defaultMessage("go")
+        msgKey.fallbackMessage("go")
 
         then: 'args should have been setup'
         msgKey.args == [name:'foo', defaultMessage: 'go']
@@ -77,7 +77,7 @@ class MsgKeySpec extends Specification  {
 
     void 'with default'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent').defaultMessage("no such animal")
+        MsgKey msgKey = MsgKey.of('nonexistent').fallbackMessage("no such animal")
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -87,7 +87,7 @@ class MsgKeySpec extends Specification  {
 
     void 'when default has named args'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent').args([name: 'taco']).defaultMessage("have a {name} 🌮")
+        MsgKey msgKey = MsgKey.of('nonexistent').args([name: 'taco']).fallbackMessage("have a {name} 🌮")
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -97,7 +97,7 @@ class MsgKeySpec extends Specification  {
 
     void 'when args have an emoji'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent').args([name: 'taco 🌮']).defaultMessage("have a {name}")
+        MsgKey msgKey = MsgKey.of('nonexistent').args([name: 'taco 🌮']).fallbackMessage("have a {name}")
 
         String msg = messageSource.getMessage(msgKey)
 
