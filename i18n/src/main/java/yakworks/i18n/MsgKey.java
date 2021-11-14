@@ -37,4 +37,11 @@ public interface MsgKey {
         return new DefaultMsgKey(code);
     }
 
+    /**
+     * key from code and map args
+     */
+    static DefaultMsgKey of(String code, Map args){
+        return new DefaultMsgKey(code).args(args);
+    }
+
 }

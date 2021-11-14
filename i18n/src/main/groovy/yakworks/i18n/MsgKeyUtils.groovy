@@ -16,12 +16,12 @@ class MsgKeyUtils {
      * sets the defaultMessage key in the map, creates an arg map if none exists
      * @param defMsg
      */
-    static MsgKey defaultMessage(MsgKey msgKey, String defMsg) {
+    static MsgKey fallbackMessage(MsgKey msgKey, String defMsg) {
         if(defMsg != null) {
             if (msgKey.args == null && msgKey.respondsTo('setArgs')) {
                 msgKey['args'] = new LinkedHashMap<>()
             }
-            msgKey.args.put("defaultMessage", defMsg)
+            msgKey.args.put("fallbackMessage", defMsg)
         }
         return msgKey
     }
@@ -35,8 +35,8 @@ class MsgKeyUtils {
         if(props.code) {
             def args = props.params?:props.msgArgs
             return MsgKey.of(props.code as String).args((args?:props) as Map)
-        } else if(props.defaultMessage) {
-            return MsgKey.of("__nonexistent__").args(props).defaultMessage(props.defaultMessage as String)
+        } else if(props.fallbackMessage) {
+            return MsgKey.of("__nonexistent__").args(props).fallbackMessage(props.fallbackMessage as String)
         } else {
             return null
         }
@@ -45,7 +45,7 @@ class MsgKeyUtils {
     static MsgKey setMessage(MsgKey msgKey, String code, List args, String defMessage = null) {
         msgKey['code'] = code
         msgKey['args'] = ( args[0] instanceof Map ? (Map)args[0] : null )
-        if(defMessage) defaultMessage(msgKey, defMessage)
+        if(defMessage) fallbackMessage(msgKey, defMessage)
         return msgKey
     }
 

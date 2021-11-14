@@ -242,7 +242,7 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
     }
 
     /**
-     * @Override
+     * Override
      */
     protected class PropertiesHolder extends ReloadableResourceBundleMessageSource.PropertiesHolder {
 

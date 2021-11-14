@@ -13,24 +13,32 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public class DefaultMsgKey implements MsgKey {
 
-    private final String code;
+    private String code;
     private Map args;
 
     public DefaultMsgKey(String code) { this.code = code; }
 
     @Override
     public String getCode() { return code; }
+    //should be rare but we are allowed to change the code
+    DefaultMsgKey code(String v) { code = v; return this;}
 
     @Override
     public Map getArgs() { return args; }
     public void setArgs(Map v) { args = v; }
-
     DefaultMsgKey args(Map v) { args = v; return this;}
 
     /**
-     * sets the defaultMessage key in the map, creates an arg map if none exists
+     * This should also be rare, but this sets the fallbackMessage key in the arg map, creates an arg map if none exists.
+     * The idea here is that if code lookup fails then this can be the fallback
      */
-    DefaultMsgKey defaultMessage(String defMsg) {
-        return (DefaultMsgKey)MsgKeyUtils.defaultMessage(this, defMsg);
+    DefaultMsgKey fallbackMessage(String defMsg) {
+        if(defMsg != null) {
+            if (args == null) {
+                args = new LinkedHashMap<>();
+            }
+            args.put("defaultMessage", defMsg);
+        }
+        return this;
     }
 }

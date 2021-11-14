@@ -13,6 +13,8 @@ import org.springframework.context.MessageSourceResolvable
 import org.springframework.context.NoSuchMessageException
 import org.springframework.context.i18n.LocaleContextHolder
 
+import yakworks.i18n.MsgService
+
 /**
  * Helper class for easy access to messages from a MessageSource,
  * Works with ICU providing various overloaded getMessage methods.
@@ -26,11 +28,11 @@ import org.springframework.context.i18n.LocaleContextHolder
  */
 @SuppressWarnings('AssignmentToStaticFieldFromInstanceMethod')
 @CompileStatic
-class MsgService implements ApplicationContextAware {
+class DefaultMsgService implements ApplicationContextAware {
 
     public static ApplicationContext appCtx
 
-    @Autowired ICUMessageSource messageSource
+    @Autowired MsgService messageSource
 
     //used mostly for testing, not set in production so LocaleContextHolder gets used
     Locale defaultLocale
@@ -56,9 +58,9 @@ class MsgService implements ApplicationContextAware {
      * @param defaultMessage String to return if the lookup fails
      * @return the message
      */
-    String getMessage(String code, String defaultMessage) {
-        return messageSource.getMessage(code, [], defaultMessage, getDefaultLocale());
-    }
+    // String getMessage(String code, String defaultMessage) {
+    //     return messageSource.getMessage(code, [], defaultMessage, getDefaultLocale());
+    // }
 
 
     /**
@@ -68,9 +70,9 @@ class MsgService implements ApplicationContextAware {
      * @param defaultMessage String to return if the lookup fails
      * @return the message
      */
-    String getMessage(String code, List args, String defaultMessage) {
-        return messageSource.getMessage(code, args as Object[], defaultMessage, getDefaultLocale());
-    }
+    // String getMessage(String code, List args, String defaultMessage) {
+    //     return messageSource.getMessage(code, args as Object[], defaultMessage, getDefaultLocale());
+    // }
 
     /**
      * Retrieve the message for the given code and the default Locale.
@@ -78,9 +80,9 @@ class MsgService implements ApplicationContextAware {
      * @return the message
      * @throws org.springframework.context.NoSuchMessageException if not found
      */
-    String getMessage(String code) throws NoSuchMessageException {
-        return messageSource.getMessage(code, getDefaultLocale());
-    }
+    // String getMessage(String code) throws NoSuchMessageException {
+    //     return messageSource.getMessage(code, getDefaultLocale());
+    // }
 
     /**
      * Retrieve the message for the given code and the default Locale.
@@ -89,9 +91,9 @@ class MsgService implements ApplicationContextAware {
      * @return the message
      * @throws org.springframework.context.NoSuchMessageException if not found
      */
-    String getMessage(String code, List args) throws NoSuchMessageException {
-        return messageSource.getMessage(code, args as Object[], getDefaultLocale());
-    }
+    // String getMessage(String code, List args) throws NoSuchMessageException {
+    //     return messageSource.getMessage(code, args as Object[], getDefaultLocale());
+    // }
 
     /**
      * Retrieve the given MessageSourceResolvable (e.g. an ObjectError instance)
@@ -100,33 +102,33 @@ class MsgService implements ApplicationContextAware {
      * @return the message
      * @throws org.springframework.context.NoSuchMessageException if not found
      */
-    String getMessage(MessageSourceResolvable resolvable) throws NoSuchMessageException {
-        return messageSource.getMessage(resolvable, getDefaultLocale());
-    }
+    // String getMessage(MessageSourceResolvable resolvable) throws NoSuchMessageException {
+    //     return messageSource.getMessage(resolvable, getDefaultLocale());
+    // }
 
     /**
      * If no message found then this one swallows the NoSuchMessageException
      * and returns an empty string
      */
-    String getMessageSafe(MessageSourceResolvable resolvable){
-        try {
-            getMessage(resolvable)
-        }catch(NoSuchMessageException e){
-            return ''
-        }
-    }
+    // String getMessageSafe(MessageSourceResolvable resolvable){
+    //     try {
+    //         getMessage(resolvable)
+    //     }catch(NoSuchMessageException e){
+    //         return ''
+    //     }
+    // }
 
     /**
      * AVOID, static cheater if in static context where we can't inject service
      */
-    static MsgService get() {
+    static DefaultMsgService get() {
         appCtx.getBean('msgService', this)
     }
 
     /**
      * AVOID, static cheater if in context where can't inject service
      */
-    static String get(MessageSourceResolvable msr) {
-        MsgService.get().getMessage(msr)
-    }
+    // static String get(MessageSourceResolvable msr) {
+    //     DefaultMsgService.get().getMessage(msr)
+    // }
 }

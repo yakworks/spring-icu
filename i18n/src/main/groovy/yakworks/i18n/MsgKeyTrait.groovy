@@ -13,9 +13,9 @@ import groovy.transform.CompileStatic
 trait MsgKeyTrait<E> implements MsgKey {
 
     String code
-    Map params
+    Map args
 
     E code(String v) { code = v; return (E)this;}
-    E args(Map v) { params = v; return (E)this;}
+    E args(Map v) { args = v; return (E)this;}
 
 }

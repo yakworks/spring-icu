@@ -16,9 +16,13 @@
 
 package yakworks.i18n.icu;
 
+import org.springframework.context.HierarchicalMessageSource;
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
+import yakworks.i18n.MsgContext;
+import yakworks.i18n.MsgService;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -48,21 +52,36 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
         setDefaultEncoding("UTF-8");
     }
 
+    /**
+     * Default icu and mapped based method
+     */
+    @Override //MsgService and ICUMessageSource
+    public String getMessage(String code, MsgContext msgCtx) {
+        String msg = getMessageInternal(code, msgCtx);
+        if (msg != null) {
+            return msg;
+        }
+        String defaultMessage = msgCtx.getFallbackMessage();
+        if (defaultMessage == null) {
+            return getDefaultMessage(code);
+        }
+        return interpolate(defaultMessage, msgCtx);
+    }
+
     @Override //MessageSourceSupport
     protected String renderDefaultMessage(String defaultMessage, @Nullable Object[] args, Locale locale) {
-        return formatMessage(defaultMessage, ICUArgsHolder.of(args), locale);
+        return interpolate(defaultMessage, MsgContext.of(args).locale(locale));
     }
 
-    //should never get hit now with overrides so throw UnsupportedOperationException just in case
-    @Override //MessageSourceSupport
-    protected String formatMessage(String msg, @Nullable Object[] args, Locale locale) {
-        throw new UnsupportedOperationException("Use formatMessage with ICUMessageArguments");
+    /**
+     * checks if local is null and returns the LocaleContextHolder.getLocale() is so
+     */
+    public Locale checkLocale(Locale locale) {
+        return (locale != null ? locale : getHolderLocale());
     }
 
-    //should never get hit now with overrides so throw UnsupportedOperationException just in case we missed something
-    @Override // AbstractMessageSource
-    protected Object[] resolveArguments(@Nullable Object[] args, Locale locale) {
-        throw new UnsupportedOperationException("caller methods should have been overriden");
+    public Locale getHolderLocale() {
+        return LocaleContextHolder.getLocale();
     }
 
     // overrides to always pull from LocaleContextHolder.getLocale()
@@ -72,9 +91,10 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
         return getHolderLocale();
     }
 
-    protected String formatMessage(String msg, ICUArgsHolder args, Locale locale) {
-        locale = checkLocale(locale);
-        if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(args)) {
+    @Override //MsgService
+    public String interpolate(String msg, MsgContext msgCtx) {
+        Locale locale = checkLocale(msgCtx.getLocale());
+        if (!isAlwaysUseMessageFormat() && ObjectUtils.isEmpty(msgCtx)) {
             return msg;
         }
         com.ibm.icu.text.MessageFormat messageFormat = null;
@@ -107,54 +127,33 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
             return msg;
         }
         synchronized (messageFormat) {
-            return args.formatWith(messageFormat);
+            return msgCtx.formatWith(messageFormat);
         }
-    }
-
-    /**
-     * used for new map based methods and calls with a defaultMessage.
-     * defaultMessage can be null and will use the code itself as a message.
-     */
-    @Override //ICUMessageSource
-    public String getICUMessage(String code, ICUArgsHolder args, @Nullable String defaultMessage, Locale locale) {
-        String msg = getMessageInternal(code, args, locale);
-        if (msg != null) {
-            return msg;
-        }
-        if (defaultMessage == null) {
-            //see if key exists in args
-            if(args.getDefaultMessage() != null){
-                return formatMessage(args.getDefaultMessage(), args, locale);
-            } else {
-                return getDefaultMessage(code);
-            }
-
-        }
-        return formatMessage(defaultMessage, args, locale);
     }
 
     @Override //AbstractMessageSource
     @Nullable
     protected String getMessageInternal(@Nullable String code, @Nullable Object[] args, @Nullable Locale locale) {
-        return getMessageInternal(code, ICUArgsHolder.of(args), locale);
+        return getMessageInternal(code, MsgContext.of(args).locale(locale));
     }
 
     @Nullable
-    protected String getMessageInternal(@Nullable String code, ICUArgsHolder args, @Nullable Locale locale) {
+    protected String getMessageInternal(@Nullable String code, MsgContext msgCtx) {
         if (code == null) {
             return null;
         }
 
-        locale = checkLocale(locale);
+        //update the local in case we need it
+        msgCtx.locale(checkLocale(msgCtx.getLocale()));
 
-        ICUArgsHolder argsToUse = args;
+        MsgContext msgCtxToUse = msgCtx;
 
-        if (!isAlwaysUseMessageFormat() && args.isEmpty()) {
+        if (!isAlwaysUseMessageFormat() && msgCtx.isEmpty()) {
             // Optimized resolution: no arguments to apply,
             // therefore no MessageFormat needs to be involved.
             // Note that the default implementation still uses MessageFormat;
             // this can be overridden in specific subclasses.
-            String message = resolveCodeWithoutArguments(code, locale);
+            String message = resolveCodeWithoutArguments(code, msgCtx.getLocale());
             if (message != null) {
                 return message;
             }
@@ -163,12 +162,12 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
             // Resolve arguments eagerly, for the case where the message
             // is defined in a parent MessageSource but resolvable arguments
             // are defined in the child MessageSource.
-            argsToUse = resolveArguments(args, locale);
+            msgCtxToUse = resolveArguments(msgCtx);
 
-            com.ibm.icu.text.MessageFormat messageFormat = resolveCodeICU(code, locale);
+            com.ibm.icu.text.MessageFormat messageFormat = resolveCodeICU(code, msgCtx.getLocale());
             if (messageFormat != null) {
                 synchronized (messageFormat) {
-                    return argsToUse.formatWith(messageFormat);
+                    return msgCtxToUse.formatWith(messageFormat);
                 }
             }
         }
@@ -178,7 +177,7 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
         if (commonMessages != null) {
             String commonMessage = commonMessages.getProperty(code);
             if (commonMessage != null) {
-                return formatMessage(commonMessage, args, locale);
+                return interpolate(commonMessage, msgCtx);
             }
         }
 
@@ -187,12 +186,29 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
         return null;
     }
 
-    protected ICUArgsHolder resolveArguments(ICUArgsHolder args, Locale locale) {
-        return args.transform( item -> {
+    /**
+     * transforms messsage args doing interpolation formatting on each one if it implements the MessageSourceResolvable
+     * @return a new MsgContext
+     */
+    protected MsgContext resolveArguments(MsgContext msgCtx) {
+        return msgCtx.transform( item -> {
             if (item instanceof MessageSourceResolvable)
-                return getMessage((MessageSourceResolvable) item, locale);
+                return getMessage((MessageSourceResolvable) item, msgCtx.getLocale());
             return item;
         });
+    }
+
+
+    //should never get hit now with overrides but throw UnsupportedOperationException just in case
+    @Override //MessageSourceSupport
+    protected String formatMessage(String msg, @Nullable Object[] args, Locale locale) {
+        throw new UnsupportedOperationException("Use formatMessage with ICUMessageArguments");
+    }
+
+    //should never get hit now with overrides but throw UnsupportedOperationException just in case we missed something
+    @Override // AbstractMessageSource
+    protected Object[] resolveArguments(@Nullable Object[] args, Locale locale) {
+        throw new UnsupportedOperationException("caller methods should have been overriden");
     }
 
 }
