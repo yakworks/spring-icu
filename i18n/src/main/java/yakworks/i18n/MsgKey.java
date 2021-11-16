@@ -146,7 +146,7 @@ public interface MsgKey<E> {
     /**
      * key from code and map args
      */
-    static DefaultMsgKey of(String code, Map args){
+    static DefaultMsgKey of(String code, Object args){
         return new DefaultMsgKey(code).args(args);
     }
 
