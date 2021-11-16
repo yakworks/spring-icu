@@ -13,6 +13,7 @@ import groovy.transform.CompileStatic
 trait MsgKeyTrait<E> implements MsgKey {
 
     String code
+    String fallbackMessage
     Map args
 
     E code(String v) { code = v; return (E)this;}

@@ -19,64 +19,33 @@ import java.util.function.Function;
  *  @since 0.3.0
  */
 @SuppressWarnings("unchecked")
-public class DefaultMsgContext implements MsgContext {
-    //option to pass in locale
-    Locale locale;
-
-    // stored as either a list or map
-    Object args;
-
-    // fallback message will get rendered if code fails
-    String fallbackMessage;
+public class DefaultMsgContext implements MsgContext<DefaultMsgContext> {
 
     public DefaultMsgContext() {}
 
-    @Override
-    public Object getArgs(){ return args; }
+    Locale locale;
+    @Override public Locale getLocale(){ return locale; }
+    @Override public DefaultMsgContext locale(Locale loc){ this.locale = loc; return this; }
 
-    @Override
-    public DefaultMsgContext args(Object args){
-        if(MsgContext.isEmpty(args)) {
-            args = Collections.emptyMap();
-        } else if(MsgContext.isArray(args)){
-            Object[] argsray = (Object[])args;
-            //if first item is map the use that otherwise make array list
-            args = MsgContext.isFirstItemMap(argsray) ? (Map)argsray[0] : Arrays.asList(argsray);
-        }
-        if(args instanceof Map || args instanceof List){
-            this.args = args;
-        } else {
-            throw new IllegalArgumentException("Message arguments must be a Map, List or Object array");
-        }
-        return this;
-    }
 
-    @Override
-    public Locale getLocale(){ return locale; }
+    private String code;
+    @Override public void setCode(String v) { code = v; }
+    @Override public String getCode() { return code; }
 
-    @Override
-    public DefaultMsgContext locale(Locale loc){ this.locale = loc; return this; }
+    // stored as either a list or map
+    Object args;
+    @Override public Object getArgs(){ return args; }
+    @Override public void setArgs(Object v) { args = v; }
 
+    // fallback message will get rendered if code fails
+    String fallbackMessage;
+    @Override public void setFallbackMessage(String v) { fallbackMessage = v; }
     /**
      * If one is set then return it,
      * if not it looks at args and if its a map then returns the defaultMessage key if it exists
      */
     @Override
     public String getFallbackMessage(){
-        if(fallbackMessage != null) return fallbackMessage;
-        if (getArgs() instanceof Map){
-            Map argMap = (Map)args;
-            if(!argMap.isEmpty()) {
-                if (argMap.containsKey("fallbackMessage")) return (String) argMap.get("fallbackMessage");
-                if (argMap.containsKey("defaultMessage")) return (String) argMap.get("defaultMessage");
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public MsgContext fallbackMessage(String fallbackMsg){
-        this.fallbackMessage = fallbackMsg;
-        return this;
+        return MsgKey.getFallbackMessage(fallbackMessage, getArgs());
     }
 }

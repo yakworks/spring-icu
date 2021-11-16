@@ -41,14 +41,7 @@ subprojects { subprj ->
 
   ext {
     //consider them all java libs, set to false for examples/testing
-    isPublishable = true
-    isExample = false
-    isGroovyLib = subprj.name in [ 'i18n', 'grails-icu4j']
-    // example test projects
-    if (subprj.name in [ 'springify', 'grailsify']){
-      isPublishable = false
-      isExample = true
-    }
+    isPublishable = subprj.findProperty('isPublishable')?.toBoolean()
   }
 
   plugins.withId('java') {
@@ -70,6 +63,7 @@ subprojects { subprj ->
 
   // if its a lib then setup gpg signing, see signing.gnupg.keyName
   if (isPublishable){
+    println "${subprj} isPublishable ${subprj.findProperty('isPublishable')}"
     apply plugin: 'java-library'
 
     // gpg signing required by nexus/sonatype

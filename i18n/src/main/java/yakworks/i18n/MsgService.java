@@ -1,6 +1,5 @@
 package yakworks.i18n;
 
-import javax.annotation.Nonnull;
 import java.util.Locale;
 
 /**
@@ -18,11 +17,11 @@ public interface MsgService {
     }
 
     default String getMessage(MsgKey msgKey){
-        return getMessage(msgKey.getCode(), MsgContext.of(msgKey.getArgs()));
+        return getMessage(msgKey.getCode(), MsgContext.of(msgKey));
     }
 
     default String getMessage(MsgKey msgKey, Locale locale){
-        return getMessage(msgKey.getCode(), MsgContext.of(msgKey.getArgs()).locale(locale));
+        return getMessage(msgKey.getCode(), MsgContext.of(msgKey).locale(locale));
     }
 
     // support the spring way and allows anything to be passed to args and the MsgArgHolder will try and sort it out

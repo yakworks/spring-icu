@@ -14,37 +14,6 @@ class MsgKeySpec extends Specification  {
         this.messageSource = messageSource
     }
 
-    void 'check builder'() {
-        when: "of static is called on ICUMsgKey"
-        MsgKey msgKey = MsgKey.of('named.arguments')
-
-        then: 'should have set it up'
-        msgKey instanceof DefaultMsgKey
-        msgKey.code == 'named.arguments'
-        msgKey.args == null
-
-        when: 'def msg is set'
-        msgKey.fallbackMessage("go go go")
-
-        then: 'args should have been setup'
-        msgKey.args['defaultMessage'] == 'go go go'
-    }
-
-    void 'check builder 2'() {
-        when: "of static is called on ICUMsgKey"
-        MsgKey msgKey = MsgKey.of('named.arguments').args([name: 'foo'])
-
-        then: 'should have set it up'
-        msgKey.code == 'named.arguments'
-        msgKey.args == [name:'foo']
-
-        when: 'def msg is set'
-        msgKey.fallbackMessage("go")
-
-        then: 'args should have been setup'
-        msgKey.args == [name:'foo', defaultMessage: 'go']
-    }
-
     void 'maps for named arguments'() {
         when:
         MsgKey msgKey = MsgKey.of('named.arguments').args([name: 'foo'])

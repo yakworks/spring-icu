@@ -189,7 +189,7 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
      * @return a new MsgContext
      */
     protected MsgContext resolveArguments(MsgContext msgCtx) {
-        return msgCtx.transform( item -> {
+        return (MsgContext) msgCtx.transform( item -> {
             if (item instanceof MessageSourceResolvable)
                 return getMessage((MessageSourceResolvable) item, msgCtx.getLocale());
             return item;

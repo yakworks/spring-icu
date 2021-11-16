@@ -17,7 +17,7 @@ class MsgKeySpec extends Specification  {
         msgKey.fallbackMessage("go go go")
 
         then: 'args should have been setup'
-        msgKey.args['defaultMessage'] == 'go go go'
+        msgKey.fallbackMessage == 'go go go'
     }
 
     void 'check builder 2'() {
@@ -32,7 +32,18 @@ class MsgKeySpec extends Specification  {
         msgKey.fallbackMessage("go")
 
         then: 'args should have been setup'
-        msgKey.args == [name:'foo', defaultMessage: 'go']
+        msgKey.fallbackMessage == 'go'
+    }
+
+    void 'check fallback in map'() {
+        when: "of static is called on ICUMsgKey"
+        MsgKey msgKey = MsgKey.of('named.arguments').args([name: 'foo', fallbackMessage: 'go'])
+
+        then: 'should have set it up'
+        msgKey.code == 'named.arguments'
+        msgKey.args == [name:'foo', fallbackMessage: 'go']
+        msgKey.fallbackMessage == 'go'
+
     }
 
 }

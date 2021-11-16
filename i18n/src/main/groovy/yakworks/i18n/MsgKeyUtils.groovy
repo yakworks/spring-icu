@@ -12,19 +12,6 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class MsgKeyUtils {
 
-    /**
-     * sets the defaultMessage key in the map, creates an arg map if none exists
-     * @param defMsg
-     */
-    static MsgKey fallbackMessage(MsgKey msgKey, String defMsg) {
-        if(defMsg != null) {
-            if (msgKey.args == null && msgKey.respondsTo('setArgs')) {
-                msgKey['args'] = new LinkedHashMap<>()
-            }
-            msgKey.args.put("fallbackMessage", defMsg)
-        }
-        return msgKey
-    }
 
     static MsgKey toMsgKey(Object target, String code = null) {
         if(MsgKey.isAssignableFrom(target.class)){
@@ -40,13 +27,6 @@ class MsgKeyUtils {
         } else {
             return null
         }
-    }
-
-    static MsgKey setMessage(MsgKey msgKey, String code, List args, String defMessage = null) {
-        msgKey['code'] = code
-        msgKey['args'] = ( args[0] instanceof Map ? (Map)args[0] : null )
-        if(defMessage) fallbackMessage(msgKey, defMessage)
-        return msgKey
     }
 
 }
