@@ -36,7 +36,7 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
     private ResourceLoader localResourceLoader
 
     boolean searchClasspath = false
-    String messageBundleLocationPattern = "classpath*:*.properties"
+    String messageBundleLocationPattern = "classpath*:messages*.properties"
 
     GrailsICUMessageSource() {
         super()
@@ -67,16 +67,13 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
                     ResourcePatternResolver resourcePatternResolver = new ClassRelativeResourcePatternResolver(applicationClass.getClass());
                     resources = resourcePatternResolver.getResources(messageBundleLocationPattern);
                 }
-                else {
-                    resources = resourceResolver.getResources(messageBundleLocationPattern);
-                }
-            }
-            else {
-                resources = resourceResolver.getResources(messageBundleLocationPattern);
             }
         }
 
+        if(!resources) return
+
         // sets the basenames to used based on whats in main project
+        // TODO this was in the original grails msg source but its not clear if or why we need it
         List<String> basenames = [] as List<String>
         for (Resource resource : resources) {
             String filename = resource.getFilename();
@@ -85,7 +82,7 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
             if(i > -1) {
                 baseName = baseName.substring(0, i);
             }
-            if(!basenames.contains(baseName) && !baseName == "")
+            if(!basenames.contains(baseName) && baseName != "")
                 basenames.add(baseName);
         }
 
