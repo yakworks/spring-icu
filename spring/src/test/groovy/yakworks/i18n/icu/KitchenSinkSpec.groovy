@@ -1,29 +1,31 @@
-package yakworks.icu
+package yakworks.i18n.icu
 
 import spock.lang.Specification;
 
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.stream.Stream
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
 
-class ICUMessageSourceSpec extends Specification  {
+import yakworks.i18n.MsgContext
+import yakworks.i18n.MsgKey
+import yakworks.i18n.MsgService
+
+class KitchenSinkSpec extends Specification  {
 
     private ICUMessageSource messageSource
 
     void setup() {
-        ICUReloadableResourceBundleMessageSource messageSource = new ICUReloadableResourceBundleMessageSource()
-        messageSource.setDefaultEncoding("UTF-8")
-        messageSource.setBasename("messages")
+        DefaultICUMessageSource messageSource = new DefaultICUMessageSource()
+        messageSource.defaultEncoding = "UTF-8"
+        messageSource.basename = "messages"
+        messageSource.useCodeAsDefaultMessage = true
         this.messageSource = messageSource
     }
 
-    void "locales should get transaled"() {
+    void "locales should get transaled with springs messageSource.getMessage and MsgService using context"() {
         expect:
         expected == messageSource.getMessage("simple", [] as Object[], locale)
+        expected == messageSource.getMessage("simple", MsgContext.empty().locale(locale))
 
         where:
         locale         | expected
@@ -33,14 +35,14 @@ class ICUMessageSourceSpec extends Specification  {
 
     void "emoji"() {
         expect:
-        "I am 🚀" == messageSource.getMessage("emoji", null, null)
+        "I am 🚀" == messageSource.getMessage("emoji")
 
     }
 
     void 'maps for named arguments'() {
         when:
         def args =[name: "confidential.pdf"]
-        String msg = messageSource.getMessage("named.arguments", args, Locale.ENGLISH)
+        String msg = messageSource.getMessage(MsgKey.of("named.arguments", args))
 
         then:
         "Attachment confidential.pdf saved" == msg
@@ -52,16 +54,10 @@ class ICUMessageSourceSpec extends Specification  {
         "Attachment confidential.pdf saved" == msg
     }
 
-    private static Stream<Arguments> pluralsArgs() {
-        return Stream.of(
-                Arguments.of(1, "Message"),
-                Arguments.of(2, "Messages")
-        );
-    }
 
     void "should pick up plurals"() {
         expect:
-        expected == messageSource.getMessage("plurals.language.specific", [count: count], Locale.ENGLISH)
+        expected == messageSource.getMessage(MsgKey.of("plurals.language.specific", [count: count]))
 
         where:
         count | expected
@@ -71,7 +67,7 @@ class ICUMessageSourceSpec extends Specification  {
 
     void "should pick up plurals exacts"() {
         expect:
-        expected == messageSource.getMessage("plurals.exact.matches", [count: count], Locale.ENGLISH)
+        expected == messageSource.getMessage(MsgKey.of("plurals.exact.matches", [count: count]))
 
         where:
         count | expected
@@ -82,7 +78,7 @@ class ICUMessageSourceSpec extends Specification  {
 
     void "plural offseting"() {
         expect:
-        expected == messageSource.getMessage("plurals.offsetting.form", [count: count], Locale.ENGLISH)
+        expected == messageSource.getMessage(MsgKey.of("plurals.offsetting.form", [count: count]))
 
         where:
         count | expected
@@ -94,7 +90,7 @@ class ICUMessageSourceSpec extends Specification  {
 
     void "gender select"() {
         expect:
-        expected == messageSource.getMessage("select", [gender: gender], Locale.ENGLISH)
+        expected == messageSource.getMessage(MsgKey.of("select", [gender: gender]))
 
         where:
         gender | expected
@@ -105,7 +101,7 @@ class ICUMessageSourceSpec extends Specification  {
 
     void "ordinal args"() {
         expect:
-        expected == messageSource.getMessage("ordinals", [count: count], Locale.ENGLISH)
+        expected == messageSource.getMessage(MsgKey.of("ordinals", [count: count]))
 
         where:
         count | expected
@@ -118,11 +114,10 @@ class ICUMessageSourceSpec extends Specification  {
 
     void testNumbers() {
         expect:
-        String msg = messageSource.getMessage("numbers", [size: 0.9], Locale.ENGLISH);
+        String msg = messageSource.getMessage(MsgKey.of("numbers", [size: 0.9]));
         "You're using 90% of your quota" == msg
     }
 
-    @Test
     void testDates() {
         when:
         Map<String, Object> args = new HashMap<>();
@@ -137,7 +132,7 @@ class ICUMessageSourceSpec extends Specification  {
         args.put("epoch", date);
 
         then:
-        "The unix epoch is Jan 1, 1970" == messageSource.getMessage("dates", args, Locale.ENGLISH);
+        "The unix epoch is Jan 1, 1970" == messageSource.getMessage(MsgKey.of("dates", args));
     }
 
     void testDefaultMessage() {
@@ -145,12 +140,23 @@ class ICUMessageSourceSpec extends Specification  {
         "default" == messageSource.getMessage("nonexistent.message", ["not used"] as Object[], "default", Locale.ENGLISH);
     }
 
-    void testDefaultMessageWithNamedArguments() {
+    void "code shoudl be returned if nothing found"() {
+        expect:
+        "nonexistent.message" == messageSource.getMessage("nonexistent.message", [foo: 'bar'], null);
+        "nonexistent.message" == messageSource.getMessage("nonexistent.message", null, null);
+    }
+
+    void "fallback in message context"() {
+        expect:
+        "got me" == messageSource.getMessage("nonexistent.message", MsgContext.empty().fallbackMessage('got me'));
+    }
+
+    void 'fallback in argument map'() {
         when:
-        Map args = ["unimportant": "not used"]
+        Map args = ["unimportant": "not used", fallbackMessage: 'got me']
 
         then:
-        "default" == messageSource.getMessage("nonexistent.message", args, "default", Locale.ENGLISH);
+        "got me" == messageSource.getMessage(MsgKey.of("nonexistent.message", args));
     }
 
     void 'null local only'() {
@@ -158,10 +164,10 @@ class ICUMessageSourceSpec extends Specification  {
         Map args = ["unimportant": "not used"]
 
         then:
-        "default" == messageSource.getMessage("nonexistent.message", args, "default", null);
+        "default" == messageSource.getMessage("nonexistent.message", [] as Object[], "default", null);
     }
 
-    void "null args and null locale should work"() {
+    void "null args and null 3rd arg(locale or defMsg) should work"() {
         expect:
         Object[] args = null;
         "Refresh inbox" == messageSource.getMessage("simple", null, null);

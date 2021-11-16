@@ -1,5 +1,8 @@
-rootProject.name = 'spring-icu-root'
+rootProject.name = 'yakworks-i18n'
 //the releasable plugins
 include 'spring'
+include 'grails'
+include 'i18n'
 
-findProject(':spring').name = 'spring-icu'
+findProject(':spring').name = 'spring-icu4j'
+findProject(':grails').name = 'grails-icu4j'

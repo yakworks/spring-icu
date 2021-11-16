@@ -1,2 +1,48 @@
-apply plugin: 'java'
+apply plugin: "com.github.spotbugs"
 apply plugin: "yakworks.groovy-lib"
+
+dependencies {
+  api project(":i18n")
+  api "com.ibm.icu:icu4j:${vICU4j}"
+
+  compileOnly "com.github.spotbugs:spotbugs-annotations:${vSpotBugs}"
+  compileOnly("org.springframework:spring-context:${springVersion}") {
+    exclude group: 'commons-logging', module: 'commons-logging'
+  }
+
+  testImplementation "org.slf4j:slf4j-simple:${vSlf4j}"
+
+  // compileOnly "javax.annotation:javax.annotation-api:1.3.2"
+
+  testImplementation "org.codehaus.groovy:groovy-all:$groovyVersion"
+  testImplementation "org.spockframework:spock-core:1.3-groovy-2.5"
+  testImplementation "org.springframework:spring-web:${springVersion}"
+  testImplementation "org.springframework:spring-test:${springVersion}"
+
+  testImplementation 'org.thymeleaf:thymeleaf-spring5:3.0.11.RELEASE'
+  testImplementation 'org.thymeleaf:thymeleaf:3.0.11.RELEASE'
+}
+
+spotbugsMain {
+  reports {
+    html.enabled = true
+  }
+}
+spotbugs {
+  ignoreFailures = false
+  showStackTraces = true
+  showProgress = false
+  reportLevel = 'high'
+  effort = 'max'
+  // visitors = [ 'FindSqlInjection', 'SwitchFallthrough' ]
+  // omitVisitors = [ 'FindNonShortCircuit' ]
+  // reportsDir = file("$buildDir/reports/spotbugs")
+  // includeFilter = file('spotbugs-include.xml')
+  excludeFilter = file("$rootDir/gradle/spotbugs-exclude.xml")
+  // onlyAnalyze = ['com.foobar.MyClass', 'com.foobar.mypkg.*']
+  // projectName = name
+  // release = version
+  // extraArgs = [ '-nested:false' ]
+  // jvmArgs = [ '-Duser.language=ja' ]
+  // maxHeapSize = '512m'
+}
