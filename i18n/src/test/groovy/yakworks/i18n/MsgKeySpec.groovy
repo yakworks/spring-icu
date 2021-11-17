@@ -72,7 +72,7 @@ class MsgKeySpec extends Specification  {
         msgKey.getArgMap()
 
         then:
-        thrown IllegalArgumentException
+        msgKey.getArgMap() == null
     }
 
     void 'add arg'() {
