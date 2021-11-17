@@ -104,8 +104,8 @@ public interface MsgKey<E> {
 
     /**
      * if args is null or empty then this initializes it to a map for names args
-     * @throws IllegalArgumentException if its an array or list already
-     * @return the initialized Map reference
+     * should check that return map as null means it didnt succeed
+     * @return the initialized Map reference, null if its a list arg
      */
     default Map getArgMap(){
         Object curArgs = getArgs();
@@ -116,13 +116,12 @@ public interface MsgKey<E> {
         } else if (curArgs instanceof Map){
             return (Map)curArgs;
         } else {
-            throw new IllegalArgumentException("Map not an option, args is already setup as an array/list");
+            return null;
         }
     }
 
     /**
      * adds an arg to the map, see getArgMap, will set one up
-     * @throws IllegalArgumentException
      * @return the args as map
      */
     default Map putArg(Object key, Object val){
