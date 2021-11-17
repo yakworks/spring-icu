@@ -1,6 +1,7 @@
 package yakworks.i18n.icu;
 
 import org.springframework.context.HierarchicalMessageSource;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
 import yakworks.i18n.MsgContext;
@@ -22,5 +23,13 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public interface ICUMessageSource extends HierarchicalMessageSource, MsgService {
 
+
+    default Locale getHolderLocale() {
+        return LocaleContextHolder.getLocale();
+    }
+
+    default String getMessage(MessageSourceResolvable resolvable){
+        return getMessage(resolvable, getHolderLocale());
+    }
 
 }

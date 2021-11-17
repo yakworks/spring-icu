@@ -12,6 +12,15 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class MsgKeyUtils {
 
+    // static MsgKey addArg(MsgKey msgKey, String key, Object val) {
+    //     if(val != null) {
+    //         if (msgKey.args == null && msgKey.respondsTo('setArgs')) {
+    //             msgKey['args'] = new LinkedHashMap<>()
+    //         }
+    //         msgKey.args.put("defaultMessage", defMsg)
+    //     }
+    //     return msgKey
+    // }
 
     static MsgKey toMsgKey(Object target, String code = null) {
         if(MsgKey.isAssignableFrom(target.class)){

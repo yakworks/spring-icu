@@ -103,6 +103,35 @@ public interface MsgKey<E> {
     }
 
     /**
+     * if args is null or empty then this initializes it to a map for names args
+     * @throws IllegalArgumentException if its an array or list already
+     * @return the initialized Map reference
+     */
+    default Map getArgMap(){
+        Object curArgs = getArgs();
+        if(curArgs == null){
+            Map argMap = new LinkedHashMap<>();
+            setArgs(argMap);
+            return argMap;
+        } else if (curArgs instanceof Map){
+            return (Map)curArgs;
+        } else {
+            throw new IllegalArgumentException("Map not an option, args is already setup as an array/list");
+        }
+    }
+
+    /**
+     * adds an arg to the map, see getArgMap, will set one up
+     * @throws IllegalArgumentException
+     * @return the args as map
+     */
+    default Map putArg(Object key, Object val){
+        Map argMap = getArgMap();
+        argMap.put(key, val);
+        return argMap;
+    }
+
+    /**
      * Checks if args is Array or List and if the first item is a map,
      * if so then it should use that map for the args and ignores the rest. Used for compatibility with Spring tempaltes
      * where is can only pass arrays for args
