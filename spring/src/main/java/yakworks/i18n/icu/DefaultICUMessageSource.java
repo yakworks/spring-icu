@@ -125,7 +125,7 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
             return msg;
         }
         synchronized (messageFormat) {
-            return msgCtx.formatWith(messageFormat);
+            return msgCtx.getArgs().formatWith(messageFormat);
         }
     }
 
@@ -146,7 +146,7 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
 
         MsgContext msgCtxToUse = msgCtx;
 
-        if (!isAlwaysUseMessageFormat() && msgCtx.isEmpty()) {
+        if (!isAlwaysUseMessageFormat() && msgCtx.getArgs().isEmpty()) {
             // Optimized resolution: no arguments to apply,
             // therefore no MessageFormat needs to be involved.
             // Note that the default implementation still uses MessageFormat;
@@ -165,7 +165,7 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
             com.ibm.icu.text.MessageFormat messageFormat = resolveCodeICU(code, msgCtx.getLocale());
             if (messageFormat != null) {
                 synchronized (messageFormat) {
-                    return msgCtxToUse.formatWith(messageFormat);
+                    return msgCtxToUse.getArgs().formatWith(messageFormat);
                 }
             }
         }

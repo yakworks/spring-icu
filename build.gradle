@@ -63,7 +63,7 @@ subprojects { subprj ->
 
   // if its a lib then setup gpg signing, see signing.gnupg.keyName
   if (isPublishable){
-    println "${subprj} isPublishable ${subprj.findProperty('isPublishable')}"
+    // println "${subprj} isPublishable ${subprj.findProperty('isPublishable')}"
     apply plugin: 'java-library'
 
     // gpg signing required by nexus/sonatype

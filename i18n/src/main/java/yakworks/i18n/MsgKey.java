@@ -24,43 +24,26 @@ import java.util.Map;
  *  @since 0.3.0
  */
 @SuppressWarnings("unchecked")
-public interface MsgKey<E> {
+public interface MsgKey {
 
-    default String getCode(){ return null; }
-    default void setCode(String code){ }
-    default E code(String code){ setCode(code); return (E)this;}
+    String getCode();
+    default void setCode(String code){
+        throw new UnsupportedOperationException("setter not implemented");
+    }
 
     /**
      * Return the Map of arguments to be used to resolve this message as ICU.
      * A default message can also be in the map params as a 'defaultMessage' key.
      */
     @Nullable
-    default Object getArgs() {
+    default MsgArgs getArgs() {
         return null;
     }
-    default void setArgs(Object args){ }
-
-    default E args(Object args){
-        if(MsgKey.isEmpty(args)) {
-            args = Collections.emptyMap();
-        } else if(MsgKey.isArray(args)){
-            Object[] argsray = (Object[])args;
-            //if first item is map the use that otherwise make array list
-            args = MsgKey.isFirstItemMap(argsray) ? (Map)argsray[0] : Arrays.asList(argsray);
-        }
-        if(args instanceof Map || args instanceof List){
-            this.setArgs(args);
-        } else {
-            throw new IllegalArgumentException("Message arguments must be a Map, List or Object array");
-        }
-        return (E) this;
+    default void setArgs(MsgArgs v){
+        throw new UnsupportedOperationException("setter not implemented");
     }
-
-    /**
-     * get the args as a Map, returns null if they are a list and not a map
-     */
-    default Map getArgsMap() {
-        return getArgs() instanceof Map ? (Map) getArgs() : null;
+    default void setArgs(Object v){
+        setArgs(MsgArgs.of(v));
     }
 
     /**
@@ -68,100 +51,17 @@ public interface MsgKey<E> {
      * Its name as a fallback as thats what it is and should not really be used or leaned on, it means the i18n is not configured correctly
      * If one is set here then return it, if not it looks at args and if its a map then returns the 'fallbackMessage' key if it exists
      */
-    String getFallbackMessage();
-
-    // default E fallbackMessage(String defMsg) {
-    //     if(defMsg != null) {
-    //         if (getArgs() == null) {
-    //             setArgs(new LinkedHashMap<>());
-    //         }
-    //         getArgs().put("defaultMessage", defMsg);
-    //     }
-    //     return (E)this;
-    // }
-    default void setFallbackMessage(String defMsg){ }
-    default E fallbackMessage(String defMsg){ setFallbackMessage(defMsg); return (E)this;}
-
-    default boolean isEmpty() {
-        return MsgKey.isEmpty(getArgs());
+    default String getFallbackMessage(){ return null; }
+    default void setFallbackMessage(String v) {
+        throw new UnsupportedOperationException("setter not implemented");
     }
+    // default void setFallbackMessage(String defMsg){ }
 
     /**
-     * calls format on the passed in messageFormat. works with ICU and stock java one spring uses
+     * Make key form code
      */
-    default String formatWith(java.text.Format messageFormat) {
-        //its either a list or a map
-        return getArgs() instanceof Map ? messageFormat.format((Map)getArgs()) : messageFormat.format(toArray());
-    }
-
-    /**
-     * converts the args list to array
-     */
-    default Object[] toArray() {
-        if(getArgs() == null) return new Object[0];
-        return ((List)getArgs()).toArray(new Object[((List)getArgs()).size()]);
-    }
-
-    /**
-     * if args is null or empty then this initializes it to a map for names args
-     * should check that return map as null means it didnt succeed
-     * @return the initialized Map reference, null if its a list arg
-     */
-    default Map getArgMap(){
-        Object curArgs = getArgs();
-        if(curArgs == null){
-            Map argMap = new LinkedHashMap<>();
-            setArgs(argMap);
-            return argMap;
-        } else if (curArgs instanceof Map){
-            return (Map)curArgs;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * adds an arg to the map, see getArgMap, will set one up
-     * @return the args as map
-     */
-    default Map putArg(Object key, Object val){
-        Map argMap = getArgMap();
-        argMap.put(key, val);
-        return argMap;
-    }
-
-    /**
-     * Checks if args is Array or List and if the first item is a map,
-     * if so then it should use that map for the args and ignores the rest. Used for compatibility with Spring tempaltes
-     * where is can only pass arrays for args
-     */
-    static boolean isFirstItemMap(Object... args) {
-        return args.length == 1 && args[0] instanceof Map;
-    }
-
-    static boolean isEmpty(Object obj) {
-        if (obj == null) return true;
-        if (obj.getClass().isArray()) return Array.getLength(obj) == 0;
-        if (obj instanceof Collection) return ((Collection) obj).isEmpty();
-        if (obj instanceof Map) return ((Map) obj).isEmpty();
-        // else
-        return false;
-    }
-
-    static boolean isArray(Object obj) {
-        return (obj != null && obj.getClass().isArray());
-    }
-
-    static String getFallbackMessage(String fieldMessage, Object args){
-        if(fieldMessage != null) return fieldMessage;
-        if (args instanceof Map){
-            Map argMap = (Map)args;
-            if(!argMap.isEmpty()) {
-                if (argMap.containsKey("fallbackMessage")) return (String) argMap.get("fallbackMessage");
-                if (argMap.containsKey("defaultMessage")) return (String) argMap.get("defaultMessage");
-            }
-        }
-        return null;
+    static DefaultMsgKey empty(){
+        return new DefaultMsgKey();
     }
 
     /**

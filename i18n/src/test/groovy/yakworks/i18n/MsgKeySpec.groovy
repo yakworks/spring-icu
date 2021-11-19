@@ -11,7 +11,10 @@ class MsgKeySpec extends Specification  {
         then: 'should have set it up'
         msgKey instanceof DefaultMsgKey
         msgKey.code == 'named.arguments'
-        msgKey.args == null
+        //will always be intialized
+        msgKey.args != null
+        //but it should be empty
+        msgKey.args.isEmpty()
 
         when: 'fallbackMessage is set'
         msgKey.fallbackMessage("go go go")
@@ -26,7 +29,7 @@ class MsgKeySpec extends Specification  {
 
         then: 'should have set it up'
         msgKey.code == 'named.arguments'
-        msgKey.args == [name:'foo']
+        msgKey.args.get() == [name:'foo']
 
         when: 'def msg is set'
         msgKey.fallbackMessage("go")
@@ -41,7 +44,7 @@ class MsgKeySpec extends Specification  {
 
         then: 'should have set it up'
         msgKey.code == 'named.arguments'
-        msgKey.args == [name:'foo', fallbackMessage: 'go']
+        msgKey.args.get() == [name:'foo', fallbackMessage: 'go']
         msgKey.fallbackMessage == 'go'
 
     }
@@ -49,12 +52,12 @@ class MsgKeySpec extends Specification  {
     void 'get argsMap and add values'() {
         when: "no args is setup"
         MsgKey msgKey = MsgKey.of('some.key')
-        assert msgKey.args == null
-        def args = msgKey.getArgMap()
+        assert msgKey.args.isEmpty()
+        def args = msgKey.args.asMap()
         args.foo = 'bar'
 
         then:
-        msgKey.args == [foo: 'bar']
+        msgKey.args.get() == [foo: 'bar']
 
     }
 
@@ -63,25 +66,24 @@ class MsgKeySpec extends Specification  {
         MsgKey msgKey = MsgKey.of('some.key', [foo: 'bar'])
 
         then:
-        msgKey.getArgMap() == [foo: 'bar']
+        msgKey.args.asMap() == [foo: 'bar']
     }
 
     void 'args map if already setup as list'() {
         when:
         MsgKey msgKey = MsgKey.of('some.key', ['foo', 'bar'])
-        msgKey.getArgMap()
 
         then:
-        msgKey.getArgMap() == null
+        msgKey.args.asMap() == null
     }
 
     void 'add arg'() {
         when:
         MsgKey msgKey = MsgKey.of('some.key', [foo: 'bar'])
-        msgKey.putArg('buzz', 'bazz')
+        msgKey.args.put('buzz', 'bazz')
 
         then:
-        msgKey.getArgMap() == [foo: 'bar', 'buzz': 'bazz']
+        msgKey.args.asMap() == [foo: 'bar', 'buzz': 'bazz']
     }
 
 }

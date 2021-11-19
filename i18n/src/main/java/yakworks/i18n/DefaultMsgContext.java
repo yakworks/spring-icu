@@ -27,25 +27,35 @@ public class DefaultMsgContext implements MsgContext<DefaultMsgContext> {
     @Override public Locale getLocale(){ return locale; }
     @Override public DefaultMsgContext locale(Locale loc){ this.locale = loc; return this; }
 
-
     private String code;
-    @Override public void setCode(String v) { code = v; }
+    public void setCode(String v) { code = v; }
     @Override public String getCode() { return code; }
 
     // stored as either a list or map
-    Object args;
-    @Override public Object getArgs(){ return args; }
-    @Override public void setArgs(Object v) { args = v; }
+    private MsgArgs msgArgs;
+
+    @Override public MsgArgs getArgs(){
+        if(msgArgs == null) msgArgs = MsgArgs.empty();
+        return msgArgs;
+    }
+
+    @Override public void setArgs(MsgArgs v){ this.msgArgs = v; }
+
+    public DefaultMsgContext args(Object args){ setArgs(args); return this; }
+
+    public DefaultMsgContext args(MsgArgs args){ setArgs(args); return this; }
 
     // fallback message will get rendered if code fails
     String fallbackMessage;
-    @Override public void setFallbackMessage(String v) { fallbackMessage = v; }
+    public void setFallbackMessage(String v) { fallbackMessage = v; }
     /**
      * If one is set then return it,
      * if not it looks at args and if its a map then returns the defaultMessage key if it exists
      */
     @Override
     public String getFallbackMessage(){
-        return MsgKey.getFallbackMessage(fallbackMessage, getArgs());
+        return (fallbackMessage != null) ? fallbackMessage : getArgs().getFallbackMessage();
     }
+
+    DefaultMsgContext fallbackMessage(String defMsg){ fallbackMessage = defMsg; return this;}
 }

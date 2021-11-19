@@ -10,13 +10,32 @@ import groovy.transform.CompileStatic
  * Trait implementation for MsgKey
  */
 @CompileStatic
-trait MsgKeyTrait<E> implements MsgKey {
+trait MsgKeyTrait<E> implements MsgKey  {
 
     String code
+    MsgArgs args
     String fallbackMessage
-    Map args
 
-    E code(String v) { code = v; return (E)this;}
-    E args(Map v) { args = v; return (E)this;}
+    E code(String code){ this.code = code; return (E)this;}
 
+    E args(Object args){
+        this.args = MsgArgs.of(args)
+        return (E)this
+    }
+
+    E args(MsgArgs args){
+        this.args = args
+        return (E)this
+    }
+
+    /**
+     * If one is set then return it,
+     * if not it looks at args and if its a map then returns the defaultMessage key if it exists
+     */
+    @Override
+    String getFallbackMessage(){
+        return (fallbackMessage != null) ? fallbackMessage : getArgs().getFallbackMessage();
+    }
+
+    E fallbackMessage(String defMsg){ fallbackMessage = defMsg; return (E)this;}
 }

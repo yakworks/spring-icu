@@ -1,10 +1,6 @@
 package yakworks.i18n;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -19,7 +15,7 @@ import java.util.function.Function;
  *  @since 0.3.0
  */
 @SuppressWarnings("unchecked")
-public interface MsgContext<E> extends MsgKey<E>{
+public interface MsgContext<E> extends MsgKey{
     //option to pass in locale
     default Locale getLocale() { return null; }
     E locale(Locale loc);
@@ -41,12 +37,12 @@ public interface MsgContext<E> extends MsgKey<E>{
      * Used to spin through args and look them up to for message.properties
      */
     default E transform(Function transformation) {
-        return getArgs() instanceof Map ? transformMap(transformation) : transformList(transformation);
+        return getArgs().isMap() ? transformMap(transformation) : transformList(transformation);
 
     }
 
     default E transformMap(Function transformation) {
-        Map<Object, Object> curArgMap = (Map<Object, Object>)getArgs();
+        Map<Object, Object> curArgMap = (Map<Object, Object>)getArgs().get();
         Map newArgs = new LinkedHashMap<>(curArgMap.size());
         for (Map.Entry item: curArgMap.entrySet()) {
             newArgs.put(item.getKey(), transformation.apply(item.getValue()));
@@ -55,7 +51,7 @@ public interface MsgContext<E> extends MsgKey<E>{
     }
 
     default E transformList(Function transformation) {
-        List curArgList = (List)getArgs();
+        List curArgList = (List)getArgs().get();
         List<Object> newArgs = new ArrayList<Object>(curArgList.size());
         for (Object item : curArgList)
             newArgs.add(transformation.apply(item));
