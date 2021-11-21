@@ -60,14 +60,7 @@ public interface MsgKey {
     /**
      * Make key form code
      */
-    static DefaultMsgKey empty(){
-        return new DefaultMsgKey();
-    }
-
-    /**
-     * Make key form code
-     */
-    static DefaultMsgKey of(String code){
+    static DefaultMsgKey ofCode(String code){
         return new DefaultMsgKey(code);
     }
 

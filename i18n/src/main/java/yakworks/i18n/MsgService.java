@@ -13,7 +13,7 @@ public interface MsgService {
 
 
     default String getMessage(String code){
-        return getMessage(MsgKey.of(code));
+        return getMessage(MsgKey.ofCode(code));
     }
 
     default String getMessage(MsgKey msgKey){

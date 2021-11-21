@@ -16,7 +16,7 @@ class MsgKeySpec extends Specification  {
 
     void 'maps for named arguments'() {
         when:
-        MsgKey msgKey = MsgKey.of('named.arguments').args([name: 'foo'])
+        MsgKey msgKey = MsgKey.of('named.arguments',[name: 'foo'])
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -26,7 +26,7 @@ class MsgKeySpec extends Specification  {
 
     void 'without arguments'() {
         when:
-        MsgKey msgKey = MsgKey.of('named.arguments')
+        MsgKey msgKey = MsgKey.ofCode('named.arguments')
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -36,7 +36,7 @@ class MsgKeySpec extends Specification  {
 
     void 'with bad code'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent.message')
+        MsgKey msgKey = MsgKey.of('nonexistent.message', null)
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -46,7 +46,7 @@ class MsgKeySpec extends Specification  {
 
     void 'with default'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent').fallbackMessage("no such animal")
+        MsgKey msgKey = MsgKey.ofCode('nonexistent').fallbackMessage("no such animal")
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -56,7 +56,7 @@ class MsgKeySpec extends Specification  {
 
     void 'when default has named args'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent').args([name: 'taco']).fallbackMessage("have a {name} 🌮")
+        MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco']).fallbackMessage("have a {name} 🌮")
 
         String msg = messageSource.getMessage(msgKey)
 
@@ -66,7 +66,7 @@ class MsgKeySpec extends Specification  {
 
     void 'when args have an emoji'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent').args([name: 'taco 🌮']).fallbackMessage("have a {name}")
+        MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco 🌮']).fallbackMessage("have a {name}")
 
         String msg = messageSource.getMessage(msgKey)
 
