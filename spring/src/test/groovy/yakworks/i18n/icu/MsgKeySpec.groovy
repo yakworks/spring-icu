@@ -1,7 +1,6 @@
 package yakworks.i18n.icu
 
 import spock.lang.Specification
-import yakworks.i18n.DefaultMsgKey
 import yakworks.i18n.MsgKey
 
 class MsgKeySpec extends Specification  {
@@ -18,7 +17,7 @@ class MsgKeySpec extends Specification  {
         when:
         MsgKey msgKey = MsgKey.of('named.arguments',[name: 'foo'])
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         "Attachment foo saved" == msg
@@ -28,7 +27,7 @@ class MsgKeySpec extends Specification  {
         when:
         MsgKey msgKey = MsgKey.ofCode('named.arguments')
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         "Attachment {name} saved" == msg
@@ -38,7 +37,7 @@ class MsgKeySpec extends Specification  {
         when:
         MsgKey msgKey = MsgKey.of('nonexistent.message', null)
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         'nonexistent.message' == msg
@@ -48,7 +47,7 @@ class MsgKeySpec extends Specification  {
         when:
         MsgKey msgKey = MsgKey.ofCode('nonexistent').fallbackMessage("no such animal")
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         'no such animal' == msg
@@ -58,7 +57,7 @@ class MsgKeySpec extends Specification  {
         when:
         MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco']).fallbackMessage("have a {name} 🌮")
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         "have a taco 🌮" == msg
@@ -68,7 +67,7 @@ class MsgKeySpec extends Specification  {
         when:
         MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco 🌮']).fallbackMessage("have a {name}")
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         "have a taco 🌮" == msg

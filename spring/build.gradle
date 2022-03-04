@@ -4,6 +4,7 @@ apply plugin: "yakworks.groovy-lib"
 dependencies {
   api project(":i18n")
   api "com.ibm.icu:icu4j:${vICU4j}"
+  api "org.yaml:snakeyaml:${vSnakeyaml}"
 
   compileOnly "com.github.spotbugs:spotbugs-annotations:${vSpotBugs}"
   compileOnly("org.springframework:spring-context:${springVersion}") {

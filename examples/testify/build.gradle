@@ -1,0 +1,39 @@
+apply plugin:"groovy"
+apply plugin: 'java-library'
+apply plugin:"org.grails.grails-plugin"
+
+dependencies {
+  console "org.grails:grails-console"
+
+  api project(":grails-icu4j")
+
+  implementation "org.springframework.boot:spring-boot-starter-logging"
+  implementation "org.springframework.boot:spring-boot-autoconfigure"
+  implementation "org.grails:grails-core"
+  implementation "org.springframework.boot:spring-boot-starter-tomcat"
+
+  implementation "org.grails:grails-web-boot"
+  implementation "org.grails:grails-plugin-services"
+
+  testCompile "org.mockito:mockito-core"
+  testCompile "org.grails:grails-web-testing-support"
+
+}
+
+bootRun {
+  ignoreExitValue true
+  jvmArgs(
+    '-Dspring.output.ansi.enabled=always',
+    '-noverify',
+    '-XX:TieredStopAtLevel=1',
+    '-Xmx1024m')
+  sourceResources sourceSets.main
+  String springProfilesActive = 'spring.profiles.active'
+  systemProperty springProfilesActive, System.getProperty(springProfilesActive)
+}
+
+//BootStrap fires for some reason in 4.x so exclude it
+jar {
+  exclude('messages*.properties')
+  // exclude('yakworks/rally/BootStrap$*.class')
+}
