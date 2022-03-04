@@ -37,11 +37,18 @@ subprojects { subprj ->
     mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }
     mavenCentral()
-  }
+    maven { url "http://repo.9ci.com/public-libs" }
+    maven { url "http://repo.9ci.com/oss-snapshots" }
 
-  ext {
-    //consider them all java libs, set to false for examples/testing
-    isPublishable = subprj.findProperty('isPublishable')?.toBoolean()
+  }
+  // get prop with default if null, converts to boolean
+  Closure getProp = { pname, defualtv -> (subprj.findProperty(pname)?:defualtv).toBoolean() }
+
+  ext { // see gradle.properties in sub-projects
+    //default true for isGormLibrary and isPublishable, set to false in gradle.props
+    isPublishable = getProp('isPublishable', true)
+    isGormLibrary = getProp('isGormLibrary', true)
+    isExample = getProp('isExample', false)
   }
 
   plugins.withId('java') {

@@ -17,6 +17,8 @@
 package yakworks.i18n.icu;
 
 import com.ibm.icu.text.MessageFormat;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
@@ -24,9 +26,11 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.lang.Nullable;
 import org.springframework.util.DefaultPropertiesPersister;
 import org.springframework.util.PropertiesPersister;
+import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -36,14 +40,17 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * ICU4j Overrides, Lost of copy paste horseplay as so much in ReloadableResourceBundleMessageSource is
- * private and final. The core issue here is that we need to return com.ibm.icu.text.MessageFormat and not java.text.MessageFormat
+ * ICU4j Overrides, Lots of copy/paste horseplay as so much in ReloadableResourceBundleMessageSource is private and final.
+ * Also instead of supporting XML like it does, we support YAMl instead.
+ * The core issue here is that we need to return com.ibm.icu.text.MessageFormat and not java.text.MessageFormat.
+ *
+ * TODO: Need to confirm what wins if defined in both places.
  */
 public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSource {
 
     private static final String PROPERTIES_SUFFIX = ".properties";
 
-    private static final String XML_SUFFIX = ".xml";
+    private static final String YML_SUFFIX = ".yml";
 
     @Nullable
     private Properties fileEncodings;
@@ -53,6 +60,7 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
     private PropertiesPersister propertiesPersister = new DefaultPropertiesPersister();
 
     private ResourceLoader resourceLoader = new DefaultResourceLoader();
+    private final YamlPropertiesFactoryBean yamlProcessor = new YamlPropertiesFactoryBean();
 
     // Cache to hold already loaded properties per filename
     private final ConcurrentMap<String, PropertiesHolder> cachedProperties = new ConcurrentHashMap<>();
@@ -60,6 +68,12 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
     // Cache to hold already loaded properties per filename
     private final ConcurrentMap<Locale, PropertiesHolder> cachedMergedProperties = new ConcurrentHashMap<>();
 
+    // Cache to hold filename lists per Locale
+    private final ConcurrentMap<String, Map<Locale, List<String>>> cachedFilenames = new ConcurrentHashMap<>();
+
+    PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper(
+        PropertyPlaceholderConfigurer.DEFAULT_PLACEHOLDER_PREFIX, PropertyPlaceholderConfigurer.DEFAULT_PLACEHOLDER_SUFFIX,
+        PropertyPlaceholderConfigurer.DEFAULT_VALUE_SEPARATOR, true);
 
     @Override
     @Nullable
@@ -97,6 +111,34 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
 
     protected void mergePluginProperties(final Locale locale, Properties mergedProps) {
         //empty, can be overridden for loading defualts first
+    }
+
+    @Override
+    protected List<String> calculateAllFilenames(String basename, Locale locale) {
+        Map<Locale, List<String>> localeMap = this.cachedFilenames.get(basename);
+        if (localeMap != null) {
+            List<String> filenames = localeMap.get(locale);
+            if (filenames != null) {
+                return filenames;
+            }
+        }
+        List<String> filenames = super.calculateAllFilenames(basename, locale);
+
+        StringBuilder temp = new StringBuilder(basename);
+        temp.append('_').append(locale.getLanguage()).append(YML_SUFFIX);
+        filenames.add(0, temp.toString());
+        //the default from super should be last one so insert right before it
+        filenames.add(filenames.size()-1, basename + YML_SUFFIX);
+
+        if (localeMap == null) {
+            localeMap = new ConcurrentHashMap<>();
+            Map<Locale, List<String>> existing = this.cachedFilenames.putIfAbsent(basename, localeMap);
+            if (existing != null) {
+                localeMap = existing;
+            }
+        }
+        localeMap.put(locale, filenames);
+        return filenames;
     }
 
     @Override
@@ -181,9 +223,12 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
     public PropertiesHolder refreshPropertiesICU(String filename, @Nullable PropertiesHolder propHolder) {
         long refreshTimestamp = (getCacheMillis() < 0 ? -1 : System.currentTimeMillis());
 
-        Resource resource = this.resourceLoader.getResource(filename + PROPERTIES_SUFFIX);
-        if (!resource.exists()) {
-            resource = this.resourceLoader.getResource(filename + XML_SUFFIX);
+        Resource resource;
+        //yaml files are passed in with the suffix already.
+        if(filename.endsWith(YML_SUFFIX)) {
+            resource = this.resourceLoader.getResource(filename);
+        } else {
+            resource = this.resourceLoader.getResource(filename + PROPERTIES_SUFFIX);
         }
 
         if (resource.exists()) {
@@ -235,6 +280,25 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
         return propHolder;
     }
 
+    @Override
+    protected Properties loadProperties(Resource resource, String filename) throws IOException {
+        Properties props = newProperties();
+        try (InputStream is = resource.getInputStream()) {
+            String resourceFilename = resource.getFilename();
+            if (resourceFilename != null && (resourceFilename.endsWith(YML_SUFFIX) )) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Loading properties [" + resource.getFilename() + "]");
+                }
+                yamlProcessor.setResources(resource);
+                return yamlProcessor.getObject();
+            } else {
+                //otherwise use the default properties loader from super
+                return super.loadProperties(resource, filename);
+            }
+
+        }
+    }
+
     public void clearCache() {
         logger.debug("Clearing entire resource bundle cache");
         this.cachedProperties.clear();
@@ -280,6 +344,13 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
             }
             String msg = this.getProperties().getProperty(code);
             if (msg != null) {
+                //with placeholderHelper, if string has ${..} then it will use placeholderResolver,
+                // otherwise it just returns the string msg that was passed in.
+                PropertyPlaceholderHelper.PlaceholderResolver placeholderResolver = (String prop) -> {
+                    return this.getProperties().getProperty(prop);
+                };
+                msg =  placeholderHelper.replacePlaceholders(msg, placeholderResolver);
+
                 if (localeMap == null) {
                     localeMap = new ConcurrentHashMap<>();
                     Map<Locale, com.ibm.icu.text.MessageFormat> existing = this.cachedMessageFormats.putIfAbsent(code, localeMap);

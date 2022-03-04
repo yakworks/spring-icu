@@ -1,0 +1,8 @@
+# this should win and override what's in the message.properties
+go: Go Go Go
+
+testing:
+  emoji: I am 🔥
+  go: got it
+  named: Hi {name}
+  namedWithRef: ${testing.emoji}, ${testing.named}

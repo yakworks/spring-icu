@@ -23,6 +23,7 @@ class MessageSourceSpec extends Specification implements GrailsUnitTest, Autowir
 
     void "messageSource lookup"(){
         when:
+
         def msg = messageSource.getMessage("default.not.found.message", ['Foo', 2] as Object[], Locale.default)
 
         then:

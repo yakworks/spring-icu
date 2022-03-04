@@ -1,10 +1,19 @@
-# Spring MessageSource ICU Support
+# Spring MessageSource ICU With Yaml Support
 
-FORK info: This used to be a grails plugin, then a fork made it spring based and the yakworks
-fork is aimed at making it gorm
-
-Provides the [ICU4J](http://site.icu-project.org/) message formatting features, such as named arguments support, flexible plural formatting,
+- Provides the [ICU4J](http://site.icu-project.org/) message formatting features, such as named arguments support, flexible plural formatting,
 rule based number format, date interval formats.
+
+- YAML resources for the messages sources. 
+
+- Simple base `MsgService` interface that's independent of any framework, makes it easy to use
+  in libraries and then share across spring, grails and micronaut etc...
+
+- Allows placeHolder replacement. So a message can look like 
+  ``` 
+  company: Yakworks
+  hello: Hey {name}, from ${company}
+  ```
+  then  `msgService.get('hello', [name: 'Bob']) == 'Hey Bob, from Yakworks'`
 
 ## Usage
 
@@ -13,18 +22,24 @@ of the core functionality
 
 ### SpringBoot
 
-`implementation 'org.yakworks:spring-icu4j:0.3.0'
+Gradle deps:
+```
+implementation 'org.yakworks:spring-icu4j:0.3.0'
+```
 
 Define the bean.
 
 ```Java
+// override the default messageSource bean, simple example, might want to build further
 @Bean
 public ICUMessageSource messageSource() {
     DefaultICUMessageSource messageSource = new DefaultICUMessageSource();
+    messageSource.setBasename("messages");
     return messageSource;
 ```
 
-Place your message.properties files under `src/main/resources`. See this projects test cases for some examples.
+Place your messages.yaml (or messages.properties) files under `src/main/resources`. 
+See this projects test cases for some examples.
 
 ### Grails 4.x +
 
@@ -32,7 +47,7 @@ Place your message.properties files under `src/main/resources`. See this project
 
 messageSource bean will be setup and overrides the default. Should be fully backword compatible.
 
-Works with messages.properties in grails-app/i18n. Can also place your message.properties files under `src/main/resources`. 
+Works with messages.properties or messages.yaml in grails-app/i18n. Can also place your message files under `src/main/resources`. 
 
 ### Project layout and running tests
 
@@ -55,7 +70,7 @@ numbered={0}, you have {1} unread messages of {2}
 user.status={username}, you have {unread} unread messages of {total}
 ```
 
-Exmaple with this libg:
+Exmaple with this lib:
 
 ```grooovy
 Map args = [username: "John", unread: 12, total: 200)
@@ -122,6 +137,13 @@ we check if the first argument of the `Object[] args` parameter passed to `org.s
 is a Map and if so cast that argument to a `Map<String, Object>` and call `com.transferwise.icu.ICUMessageSource#getMessage`
 
 See com.transferwise.icu.ICUAbstractMessageSource.isNamedArgumentsMapPresent
+
+## Yaml
+
+https://github.com/akkinoc/yaml-resource-bundle
+https://stackoverflow.com/questions/43655895/spring-boot-yml-resourcebundle-file
+https://gist.github.com/composite/eb3a3fd85d7ba9891f860e4a9fed06b9
+
 
 # License
 This library is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).

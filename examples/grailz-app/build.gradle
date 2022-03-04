@@ -1,0 +1,49 @@
+apply plugin:"groovy"
+//apply plugin:"war"
+apply plugin:"org.grails.grails-web"
+apply plugin:"war"
+apply plugin:"org.grails.grails-web"
+apply plugin:"org.grails.grails-gsp"
+
+
+dependencies {
+  console "org.grails:grails-console"
+
+  compile project(":testify")
+
+  compile "org.springframework.boot:spring-boot-starter-logging"
+  compile "org.springframework.boot:spring-boot-autoconfigure"
+  compile "org.grails:grails-core"
+  compile "org.springframework.boot:spring-boot-starter-actuator"
+  compile "org.springframework.boot:spring-boot-starter-tomcat"
+  compile "org.grails:grails-web-boot"
+  compile "org.grails:grails-logging"
+  compile "org.grails:grails-plugin-rest"
+  compile "org.grails:grails-plugin-databinding"
+  compile "org.grails:grails-plugin-i18n"
+  compile "org.grails:grails-plugin-services"
+  compile "org.grails:grails-plugin-url-mappings"
+  compile "org.grails:grails-plugin-interceptors"
+
+  testCompile "org.mockito:mockito-core"
+  testCompile "org.grails:grails-web-testing-support"
+
+}
+
+bootRun {
+  ignoreExitValue true
+  jvmArgs(
+    '-Dspring.output.ansi.enabled=always',
+    '-noverify',
+    '-XX:TieredStopAtLevel=1',
+    '-Xmx1024m')
+  sourceResources sourceSets.main
+  String springProfilesActive = 'spring.profiles.active'
+  systemProperty springProfilesActive, System.getProperty(springProfilesActive)
+}
+
+//BootStrap fires for some reason in 4.x so exclude it
+jar {
+  exclude('messages*.properties')
+  // exclude('yakworks/rally/BootStrap$*.class')
+}

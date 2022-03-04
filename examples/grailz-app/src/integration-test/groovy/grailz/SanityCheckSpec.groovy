@@ -1,0 +1,35 @@
+package grailz
+
+import grails.testing.mixin.integration.Integration
+import org.springframework.beans.factory.annotation.Autowired
+import spock.lang.Ignore
+import spock.lang.IgnoreRest
+import spock.lang.Specification
+import yakworks.i18n.MsgContext
+import yakworks.i18n.MsgKey
+import yakworks.i18n.icu.ICUMessageSource
+
+// Use as a simple to test when trying to see why application context has problem on init
+@Integration
+class SanityCheckSpec extends Specification {
+
+    @Autowired
+    ICUMessageSource messageSource
+
+    void "should pick up messages.yaml override"() {
+        expect:
+        expected == messageSource.get(key, MsgContext.of(locale))
+
+        where:
+        key             | locale         | expected
+        'simple'        | Locale.ENGLISH | "Replace" //normal properties override
+        'simple'        | Locale.FRENCH  | "Actualiser Replace"
+        'go'            | Locale.ENGLISH | "go new" //overrides
+        'go'            | Locale.FRENCH  | "aller new"
+        'testing.emoji' | Locale.ENGLISH | "I am 🔥" //exists in plugin yml
+        'testing.emoji' | Locale.FRENCH  | "je suis 🔥"
+        'testing.go'    | Locale.ENGLISH | "got it" //exists only in messages.yml
+        'testing.go'    | Locale.FRENCH  | "got it" //exists only in messages.yml, not fr
+    }
+
+}

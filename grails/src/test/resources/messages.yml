@@ -1,0 +1,10 @@
+# this should win and override what's in the message.properties
+go: Go Go Go
+
+testing:
+  emoji: I am 🔥
+  go: got it
+  named: Hi {name}
+
+# simple on that can be copied in
+default.not.found.message: '{0} not found with id {1}'

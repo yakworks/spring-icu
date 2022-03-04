@@ -16,10 +16,13 @@
 
 package yakworks.i18n.icu;
 
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.PropertyPlaceholderHelper;
 import yakworks.i18n.MsgContext;
 
 import java.util.HashMap;
@@ -28,8 +31,9 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * ICU4j Overrides, Lost of copy paste as so much in ReloadableResourceBundleMessageSource is
- * private and final. The core issue here is that we need to return com.ibm.icu.text.MessageFormat and not java.text.MessageFormat
+ * ICU4j Overrides, Lots of copy/paste from ReloadableResourceBundleMessageSource as it wasn't made to be easy to override
+ * and so much is private and final there.
+ * The core issue here is that we need to return com.ibm.icu.text.MessageFormat and NOT java.text.MessageFormat
  * from many of the methods and so can't easily override
  * basically overrides what we need from {@link org.springframework.context.support.MessageSourceSupport} and
  * {@link org.springframework.context.support.AbstractMessageSource}
@@ -152,8 +156,12 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
             // Note that the default implementation still uses MessageFormat;
             // this can be overridden in specific subclasses.
             String message = resolveCodeWithoutArguments(code, msgCtx.getLocale());
+
             if (message != null) {
-                return message;
+                PropertyPlaceholderHelper.PlaceholderResolver noArgsPlaceholderResolver = (String prop) -> {
+                    return resolveCodeWithoutArguments(prop, msgCtx.getLocale());
+                };
+                return placeholderHelper.replacePlaceholders(message, noArgsPlaceholderResolver);
             }
         }
         else {
@@ -209,4 +217,11 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
         throw new UnsupportedOperationException("caller methods should have been overriden");
     }
 
+    // class MessagesPlaceholderResolver implements PropertyPlaceholderHelper.PlaceholderResolver {
+    //
+    //     @Override
+    //     public String resolvePlaceholder(String placeholderName) {
+    //
+    //     }
+    // }
 }

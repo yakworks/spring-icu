@@ -8,7 +8,6 @@ import groovy.transform.CompileStatic
 
 import org.grails.core.io.CachingPathMatchingResourcePatternResolver
 import org.grails.core.support.internal.tools.ClassRelativeResourcePatternResolver
-import org.grails.plugins.BinaryGrailsPlugin
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.core.io.Resource
 import org.springframework.core.io.ResourceLoader
@@ -35,7 +34,11 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
     PathMatchingResourcePatternResolver resourceResolver
     private ResourceLoader localResourceLoader
 
+    public static final String PROPERTIES_EXTENSION = ".properties";
+    public static final String DEFAULT_PROPERTIES_ENCODING = "UTF-8";
+
     boolean searchClasspath = false
+    //TODO confusion on this
     String messageBundleLocationPattern = "classpath*:messages*.properties"
 
     GrailsICUMessageSource() {
@@ -90,18 +93,17 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
 
     }
 
+    /**
+     * Called at start and merges in the props  from anywhere
+     *
+     * @param locale the locale
+     * @param mergedProps the base properties to merge into
+     */
     @Override //implement the empty mergePluginProperties which gets called first
     protected void mergePluginProperties(final Locale locale, Properties mergedProps) {
         final GrailsPlugin[] allPlugins = pluginManager.getAllPlugins();
-        for (GrailsPlugin plugin : allPlugins) {
-            if (plugin instanceof BinaryGrailsPlugin) {
-                BinaryGrailsPlugin binaryPlugin = (BinaryGrailsPlugin) plugin;
-                final Properties binaryPluginProperties = binaryPlugin.getProperties(locale);
-                if (binaryPluginProperties != null) {
-                    mergedProps.putAll(binaryPluginProperties);
-                }
-            }
-        }
+        def pluginYamlProperties = new PluginYamlProperties(pluginManager)
+        pluginYamlProperties.mergePluginProperties(locale, mergedProps)
     }
 
     @Override

@@ -20,12 +20,24 @@ public interface MsgContext<E> extends MsgKey{
     default Locale getLocale() { return null; }
     E locale(Locale loc);
 
+    static DefaultMsgContext of(Locale loc){
+        return new DefaultMsgContext().locale(loc);
+    }
+
     static DefaultMsgContext of(Object args){
         return new DefaultMsgContext().args(args);
     }
 
+    /**
+     * makes context using the args and fallback message from msgKey.
+     * Does NOT copy the code
+     */
     static DefaultMsgContext of(MsgKey msgKey){
         return new DefaultMsgContext().args(msgKey.getArgs()).fallbackMessage(msgKey.getFallbackMessage());
+    }
+
+    static DefaultMsgContext withFallback(String fallback){
+        return new DefaultMsgContext().fallbackMessage(fallback);
     }
 
     static DefaultMsgContext empty(){

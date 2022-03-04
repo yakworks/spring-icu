@@ -1,28 +1,37 @@
-package yakworks.i18n.icu
+package testify
 
-import java.time.LocalDate
-import java.time.ZoneId
-
-import org.springframework.beans.factory.annotation.Autowired
-
+import grails.config.Config
+import grails.core.GrailsApplication
 import grails.testing.mixin.integration.Integration
 import spock.lang.Ignore
 import spock.lang.Specification
-import yakworks.i18n.DefaultMsgKey
+import yakworks.i18n.MsgContext
 import yakworks.i18n.MsgKey
+import yakworks.i18n.icu.ICUMessageSource
 
 // Use as a simple to test when trying to see why application context has problem on init
 @Integration
 class SanityCheckSpec extends Specification {
 
-    @Autowired
+    GrailsApplication grailsApplication
     ICUMessageSource messageSource
+
+    void 'check config'() {
+        when:
+        Config config = grailsApplication.config
+
+        then:
+        "FOO" == config.foo
+        "BAR" == config.bar
+        'FOO/BAR' == config.fooBar
+        'FOO/$bar' == config.fooBarDollar
+    }
 
     void 'maps for named arguments'() {
         when:
         MsgKey msgKey = MsgKey.of('named.arguments', [name: 'foo'])
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         "Attachment foo saved" == msg
@@ -32,10 +41,27 @@ class SanityCheckSpec extends Specification {
         when:
         MsgKey msgKey = MsgKey.ofCode('named.arguments')
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         "Attachment {name} saved" == msg
+    }
+
+    void "should pick up messages.yaml"() {
+        expect:
+        //old way
+        expected == messageSource.getMessage(key, [] as Object[], locale)
+        //new way
+        expected == messageSource.get(key, MsgContext.of(locale))
+
+        where:
+        key             | locale         | expected
+        'go'            | Locale.ENGLISH | "Go Go Go" //exists in both
+        'go'            | Locale.FRENCH  | "aller aller aller"
+        'testing.emoji' | Locale.ENGLISH | "I am 🔥" //exists in yml
+        'testing.emoji' | Locale.FRENCH  | "je suis 🔥"
+        'testing.go'    | Locale.ENGLISH | "got it" //exists only in messages.yml
+        'testing.go'    | Locale.FRENCH  | "got it" //exists only in messages.yml, not fr
     }
 
     @Ignore //FIXME need to get this working
@@ -43,7 +69,7 @@ class SanityCheckSpec extends Specification {
         when:
         MsgKey msgKey = MsgKey.ofCode('nonexistent.message')
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         'nonexistent.message' == msg
@@ -53,7 +79,7 @@ class SanityCheckSpec extends Specification {
         when:
         MsgKey msgKey = MsgKey.ofCode('nonexistent').fallbackMessage("no such animal")
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         'no such animal' == msg
@@ -63,7 +89,7 @@ class SanityCheckSpec extends Specification {
         when:
         MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco']).fallbackMessage("have a {name} 🌮")
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         "have a taco 🌮" == msg
@@ -73,7 +99,7 @@ class SanityCheckSpec extends Specification {
         when:
         MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco 🌮']).fallbackMessage("have a {name}")
 
-        String msg = messageSource.getMessage(msgKey)
+        String msg = messageSource.get(msgKey)
 
         then:
         "have a taco 🌮" == msg

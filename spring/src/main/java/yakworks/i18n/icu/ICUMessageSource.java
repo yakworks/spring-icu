@@ -24,10 +24,16 @@ import java.util.Map;
 public interface ICUMessageSource extends HierarchicalMessageSource, MsgService {
 
 
+    /**
+     * Get the locale from the LocaleContextHolder
+     */
     default Locale getHolderLocale() {
         return LocaleContextHolder.getLocale();
     }
 
+    /**
+     * Get using the Locale in the HolderLocale
+     */
     default String getMessage(MessageSourceResolvable resolvable){
         return getMessage(resolvable, getHolderLocale());
     }

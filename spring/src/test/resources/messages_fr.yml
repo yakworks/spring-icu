@@ -1,0 +1,6 @@
+# this should win and override what's in the message.properties
+go: aller aller aller
+
+testing:
+  emoji: je suis 🔥
+  named: Salut {name}
