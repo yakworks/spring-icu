@@ -14,12 +14,11 @@ class Icu4jGrailsPlugin extends grails.plugins.Plugin {
         // GrailsApplication application = grailsApplication
 
         messageSource(GrailsICUMessageSource, grailsApplication, pluginManager) {
-            // fallbackToSystemLocale = false
+            ymlLocationPatterns = ["*messages*.yml"]
+            //What to search for in main app to get names
+            messageBundleLocationPattern = "classpath*:messages*.properties"
+            // useCodeAsDefaultMessage = true
         }
-        // messageSource(DefaultICUMessageSource) {
-        //     // basename = "classpath:messages"
-        //     // defaultEncoding = "UTF-8"
-        //     // useCodeAsDefaultMessage = true
-        // }
+
     }}
 }

@@ -14,6 +14,7 @@ import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.core.io.support.ResourcePatternResolver
+import org.springframework.util.AntPathMatcher
 import org.springframework.util.StringUtils
 
 import grails.io.IOUtils
@@ -26,14 +27,14 @@ import grails.plugins.exceptions.PluginException
  */
 @Slf4j
 @CompileStatic
-class PluginYamlProperties {
+class PluginMessagesMerger {
 
     GrailsPluginManager pluginManager
     String ymlSuffix = ".yml"
-    String messagesYmlPattern = "message*.yml"
+    List<String> ymlLocationPatterns
     private final YamlPropertiesFactoryBean yamlProcessor = new YamlPropertiesFactoryBean()
 
-    PluginYamlProperties(GrailsPluginManager pluginManager){
+    PluginMessagesMerger(GrailsPluginManager pluginManager){
         this.pluginManager = pluginManager
     }
 
@@ -67,12 +68,18 @@ class PluginYamlProperties {
 
         Properties properties = null;
         if(url != null) {
-            StaticResourceLoader resourceLoader = new StaticResourceLoader();
+            StaticResourceLoader resourceLoader = new StaticResourceLoader()
             resourceLoader.baseResource= url
-            ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(resourceLoader);
+            ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(resourceLoader)
+            (resolver.pathMatcher as AntPathMatcher).setCaseSensitive(false)
             try {
                 // first load all ymls
-                Resource[] resources = resolver.getResources(messagesYmlPattern)
+                List<Resource> resourceList = []
+                ymlLocationPatterns.each{
+                    resourceList.addAll(resolver.getResources(it))
+                }
+
+                Resource[] resources = resourceList as Resource[]
                 //filter them down
                 resources = resources.length > 0 ? filterResources(resources, locale) : resources
 

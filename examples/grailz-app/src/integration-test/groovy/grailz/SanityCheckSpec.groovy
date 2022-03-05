@@ -32,4 +32,9 @@ class SanityCheckSpec extends Specification {
         'testing.go'    | Locale.FRENCH  | "got it" //exists only in messages.yml, not fr
     }
 
+    void 'does it pick up ValidationMessages files'() {
+        expect:
+        'must be less than or equal to 1' == messageSource.get('jakarta.validation.constraints.Max.message', [value:1])
+        'Got it' == messageSource.get('some.validation.message')
+    }
 }

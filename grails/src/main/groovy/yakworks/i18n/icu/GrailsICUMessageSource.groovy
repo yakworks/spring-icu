@@ -34,12 +34,10 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
     PathMatchingResourcePatternResolver resourceResolver
     private ResourceLoader localResourceLoader
 
-    public static final String PROPERTIES_EXTENSION = ".properties";
-    public static final String DEFAULT_PROPERTIES_ENCODING = "UTF-8";
-
     boolean searchClasspath = false
-    //TODO confusion on this
+    //What to search for in app
     String messageBundleLocationPattern = "classpath*:messages*.properties"
+    List<String> ymlLocationPatterns = ["*messages*.yml"]
 
     GrailsICUMessageSource() {
         super()
@@ -76,7 +74,8 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
         if(!resources) return
 
         // sets the basenames to used based on whats in main project
-        // TODO this was in the original grails msg source but its not clear if or why we need it
+        // so if no fresh files are used then it doesn't
+        // TODO not clear if we need this
         List<String> basenames = [] as List<String>
         for (Resource resource : resources) {
             String filename = resource.getFilename();
@@ -93,6 +92,12 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
 
     }
 
+    PluginMessagesMerger getPluginMessagesMerger(){
+        def pluginMessagesMerger = new PluginMessagesMerger(pluginManager)
+        pluginMessagesMerger.ymlLocationPatterns = ymlLocationPatterns
+        return pluginMessagesMerger
+    }
+
     /**
      * Called at start and merges in the props  from anywhere
      *
@@ -102,8 +107,7 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
     @Override //implement the empty mergePluginProperties which gets called first
     protected void mergePluginProperties(final Locale locale, Properties mergedProps) {
         final GrailsPlugin[] allPlugins = pluginManager.getAllPlugins();
-        def pluginYamlProperties = new PluginYamlProperties(pluginManager)
-        pluginYamlProperties.mergePluginProperties(locale, mergedProps)
+        getPluginMessagesMerger().mergePluginProperties(locale, mergedProps)
     }
 
     @Override

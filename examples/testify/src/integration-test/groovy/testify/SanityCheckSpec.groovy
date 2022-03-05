@@ -64,15 +64,10 @@ class SanityCheckSpec extends Specification {
         'testing.go'    | Locale.FRENCH  | "got it" //exists only in messages.yml, not fr
     }
 
-    @Ignore //FIXME need to get this working
-    void 'with bad code'() {
-        when:
-        MsgKey msgKey = MsgKey.ofCode('nonexistent.message')
-
-        String msg = messageSource.get(msgKey)
-
-        then:
-        'nonexistent.message' == msg
+    void 'does it pick up ValidationMessages files'() {
+        expect:
+        'must be less than or equal to 1' == messageSource.get('jakarta.validation.constraints.Max.message', [value:1])
+        'Got it' == messageSource.get('some.validation.message')
     }
 
     void 'with default'() {
