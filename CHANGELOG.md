@@ -1,3 +1,10 @@
+### v0.5.1
+
+[Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v0.5.0...v0.5.1)
+- release [link](https://github.com/yakworks/spring-icu4j/commit/6f73d9c7a723c1b10c42227e2f7a9d4667ee7e1f)
+- Merge branch 'master' of https://github.com/yakworks/spring-icu [link](https://github.com/yakworks/spring-icu4j/commit/e4e8fa676a68f48e00d6619d7983cc49fb9f5b3c)
+- add multiKey [link](https://github.com/yakworks/spring-icu4j/commit/1337e6e7a4e95f6f238aee10b90dd7170c365fb0)
+
 ### v0.5.0
 
 [Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v0.4.3...v0.5.0)
