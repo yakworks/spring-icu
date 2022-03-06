@@ -22,6 +22,7 @@ import grails.plugins.GrailsPlugin
 import grails.plugins.GrailsPluginManager
 import grails.plugins.PluginManagerAware
 import grails.util.GrailsStringUtils
+import org.springframework.util.AntPathMatcher
 
 /**
  * Based in part on PluginAwareResourceBundleMessageSource but most of that is not needed.
@@ -56,6 +57,10 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
         }
 
         Resource[] resources;
+
+        // make it so its not case sensitive and wild card matching is a bit easier
+        //for example we can overriide and do "classpath*:*messages*.properties" to pick up ValidationMessages and messages
+        (resourceResolver.pathMatcher as AntPathMatcher).setCaseSensitive(false)
 
         if(searchClasspath) {
             resources = resourceResolver.getResources(messageBundleLocationPattern);
