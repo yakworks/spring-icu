@@ -13,6 +13,7 @@ import org.springframework.core.io.Resource
 import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.core.io.support.ResourcePatternResolver
+import org.springframework.util.AntPathMatcher
 
 import grails.core.DefaultGrailsApplication
 import grails.core.GrailsApplication
@@ -22,7 +23,6 @@ import grails.plugins.GrailsPlugin
 import grails.plugins.GrailsPluginManager
 import grails.plugins.PluginManagerAware
 import grails.util.GrailsStringUtils
-import org.springframework.util.AntPathMatcher
 
 /**
  * Based in part on PluginAwareResourceBundleMessageSource but most of that is not needed.
