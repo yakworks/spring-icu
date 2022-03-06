@@ -5,4 +5,5 @@ testing:
   emoji: I am 🔥
   go: got it
   named: Hi {name}
+  named2: Hi {name} 2
   namedWithRef: ${testing.emoji}, ${testing.named}

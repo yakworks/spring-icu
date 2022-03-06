@@ -65,7 +65,11 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
         }
         String defaultMessage = msgCtx.getFallbackMessage();
         if (defaultMessage == null) {
-            return getDefaultMessage(code);
+            if(isUseCodeAsDefaultMessage() && msgCtx.isUseCodeAsDefaultMessage()) {
+                return getDefaultMessage(code);
+            } else {
+                return null;
+            }
         }
         return interpolate(defaultMessage, msgCtx);
     }

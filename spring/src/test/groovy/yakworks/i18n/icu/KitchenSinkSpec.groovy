@@ -1,6 +1,7 @@
 package yakworks.i18n.icu
 
-import spock.lang.Specification;
+import spock.lang.Specification
+import yakworks.i18n.MsgMultiKey;
 
 import java.time.LocalDate
 import java.time.ZoneId
@@ -211,10 +212,26 @@ class KitchenSinkSpec extends Specification  {
         "Simple Message" == msgService.get("simple", null, null);
     }
 
-    void testNullArguments() {
+    void "multiKey test args"() {
         expect:
-        Object[] args = null;
-        "Simple Message" == msgService.getMessage("simple", args as Object[], "default", Locale.ENGLISH);
+        //first one is not there, second gets picked up
+        def mmk = MsgMultiKey.ofCodes(["nonexistent.message", 'simple'])
+        "Simple Message" == msgService.get(mmk)
+
+        //first one is not there, second gets picked up
+        def mmk2 = MsgMultiKey.ofCodes(["emoji", 'simple'])
+        "I am 🚀" == msgService.get(mmk2)
+    }
+
+    void "multiKey args"() {
+        expect:
+        //first one is not there, second gets picked up
+        def mmk = MsgMultiKey.of(MsgKey.of('', [name: 'Bob'])).codes(["nonexistent.message", 'testing.named'])
+        "Hi Bob" == msgService.get(mmk)
+
+        //first one is not there, second gets picked up
+        def mmk2 = MsgMultiKey.of(MsgKey.of('', [name: 'Bob'])).codes(["testing.named2", 'testing.named'])
+        "Hi Bob 2" == msgService.get(mmk2)
     }
 
 }

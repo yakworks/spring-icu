@@ -70,4 +70,6 @@ public interface MsgContext<E> extends MsgKey{
         return (E) MsgContext.of(newArgs).locale(getLocale());
     }
 
+    boolean isUseCodeAsDefaultMessage();
+
 }

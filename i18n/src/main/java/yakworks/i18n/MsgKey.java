@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ICUMsgKey contains the lookup code for the message and the argument map for name substitutions.
+ * MsgKey contains the lookup code for the message and the argument map for name substitutions.
  * Can also have a defaultMessage stored as a key in the argument map
  *
  * Related to org.springframework.context.MessageSourceResolvable interface but simplified.

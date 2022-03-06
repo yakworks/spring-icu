@@ -1,5 +1,6 @@
 package yakworks.i18n;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -47,10 +48,6 @@ public interface MsgService {
         return getMessage(context.getCode(), context);
     }
 
-    default String get(MsgKey msgKey, Locale locale){
-        return getMessage(msgKey.getCode(), MsgContext.of(msgKey).locale(locale));
-    }
-
     // support the spring way and allows anything to be passed to args and the MsgArgHolder will try and sort it out
     default String get(String code, Object args, String fallbackMessage){
         return getMessage(code, MsgContext.of(args).fallbackMessage(fallbackMessage));
@@ -58,6 +55,27 @@ public interface MsgService {
 
     default String get(String code, Object args){
         return getMessage(code, MsgContext.of(args));
+    }
+
+    /**
+     * Get first found message for multiKey
+     */
+    default String get(MsgMultiKey msgMultiKey){
+        List<String> codes = msgMultiKey.getCodes();
+        if (codes != null) {
+            String lastCode = "";
+            for (String code : codes) {
+                lastCode = code;
+                String message = get(code, MsgContext.of(msgMultiKey).useCodeAsDefaultMessage(false));
+                if (message != null) {
+                    return message;
+                }
+            }
+            // if we got here then nothing found, if spring service has useCodeAsDefaultMessage
+            // then run again and if true will return the code, otherwise null.
+            return get(lastCode, MsgContext.of(msgMultiKey).useCodeAsDefaultMessage(true));
+        }
+        return null;
     }
 
     /**

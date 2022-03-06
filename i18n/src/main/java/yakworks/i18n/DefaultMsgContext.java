@@ -58,4 +58,13 @@ public class DefaultMsgContext implements MsgContext<DefaultMsgContext> {
     }
 
     DefaultMsgContext fallbackMessage(String defMsg){ fallbackMessage = defMsg; return this;}
+
+    boolean useCodeAsDefaultMessage = true;
+    public boolean isUseCodeAsDefaultMessage() {
+        return useCodeAsDefaultMessage;
+    }
+    public DefaultMsgContext useCodeAsDefaultMessage(boolean v) {
+        this.useCodeAsDefaultMessage = v;
+        return this;
+    }
 }
