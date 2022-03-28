@@ -1,3 +1,8 @@
+### v0.5.2
+
+[Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v0.5.1...v0.5.2)
+- add ability to have externalLocation dir set in config for grails that will pick up external message.properties and added ability to set config for cacheSeconds [link](https://github.com/yakworks/spring-icu4j/commit/1adb386347d56218b1c78c3fa0d0e868d909ce4c)
+
 ### v0.5.1
 
 [Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v0.5.0...v0.5.1)
