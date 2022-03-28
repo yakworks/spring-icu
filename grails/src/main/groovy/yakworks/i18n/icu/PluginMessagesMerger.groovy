@@ -7,15 +7,10 @@ package yakworks.i18n.icu
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
-import org.grails.core.io.StaticResourceLoader
 import org.grails.plugins.BinaryGrailsPlugin
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver
-import org.springframework.core.io.support.ResourcePatternResolver
-import org.springframework.util.AntPathMatcher
-import org.springframework.util.StringUtils
 
 import grails.io.IOUtils
 import grails.plugins.GrailsPlugin
@@ -68,21 +63,8 @@ class PluginMessagesMerger {
 
         Properties properties = null;
         if(url != null) {
-            StaticResourceLoader resourceLoader = new StaticResourceLoader()
-            resourceLoader.baseResource= url
-            ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(resourceLoader)
-            (resolver.pathMatcher as AntPathMatcher).setCaseSensitive(false)
             try {
-                // first load all ymls
-                List<Resource> resourceList = []
-                ymlLocationPatterns.each{
-                    resourceList.addAll(resolver.getResources(it))
-                }
-
-                Resource[] resources = resourceList as Resource[]
-                //filter them down
-                resources = resources.length > 0 ? filterResources(resources, locale) : resources
-
+                Resource[] resources = MessagesFilter.findResources(url, ymlLocationPatterns, ymlSuffix, locale)
                 if(resources.length > 0) {
                     yamlProcessor.setResources(resources)
                     properties = yamlProcessor.getObject()
@@ -94,50 +76,4 @@ class PluginMessagesMerger {
         return properties;
     }
 
-    Resource[] filterResources(Resource[] resources, Locale locale) {
-
-        List<Resource> finalResources = []
-
-        for (Resource resource : resources) {
-            String fn = resource.getFilename()
-
-            if(fn.indexOf('_') > -1) {
-                if(fn.endsWith('_' + locale.toString() + ymlSuffix)) {
-                    finalResources.add(resource)
-                }
-                else if(fn.endsWith('_' + locale.getLanguage() + '_' + locale.getCountry() + ymlSuffix)) {
-                    finalResources.add(resource)
-                }
-                else if(fn.endsWith('_' + locale.getLanguage() + ymlSuffix)) {
-                    finalResources.add(resource)
-                }
-            }
-            else {
-                finalResources.add(resource)
-            }
-        }
-        return sortResources(finalResources as Resource[])
-    }
-
-    /**
-     * message bundles are locale specific. The more underscores the locale has the more specific the locale
-     * so we order by the number of underscores present so that the most specific appears
-     */
-    Resource[] sortResources(Resource[] resources){
-        // taken from BinaryGrailsPlugin
-        return resources.sort{ o1, o2 ->
-            String f1 = o1.getFilename()
-            String f2 = o2.getFilename()
-
-            int firstUnderscoreCount = StringUtils.countOccurrencesOf(f1, "_")
-            int secondUnderscoreCount = StringUtils.countOccurrencesOf(f2, "_")
-
-            if(firstUnderscoreCount == secondUnderscoreCount) {
-                return 0;
-            }
-            else {
-                return firstUnderscoreCount > secondUnderscoreCount ?  1 : -1;
-            }
-        }
-    }
 }

@@ -49,6 +49,15 @@ messageSource bean will be setup and overrides the default. Should be fully back
 
 Works with messages.properties or messages.yaml in grails-app/i18n. Can also place your message files under `src/main/resources`. 
 
+### Grails External Properties
+
+can set 2 config properties
+
+`yakworks.i18n.externalLocation="'file:///app/external-resources'`
+
+to set how long to cache
+`yakworks.i18n.cacheSeconds=60`
+
 ### Project layout and running tests
 
 can use `make check` or `./gradlew check` to run the full monty

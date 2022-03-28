@@ -9,6 +9,8 @@ import groovy.transform.CompileStatic
 import org.grails.core.io.CachingPathMatchingResourcePatternResolver
 import org.grails.core.support.internal.tools.ClassRelativeResourcePatternResolver
 import org.springframework.beans.factory.InitializingBean
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.FileSystemResource
 import org.springframework.core.io.Resource
 import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
@@ -37,8 +39,14 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
 
     boolean searchClasspath = false
     //What to search for in app
-    String messageBundleLocationPattern = "classpath*:messages*.properties"
-    List<String> ymlLocationPatterns = ["*messages*.yml"]
+    String messageBundleLocations = "classpath*:messages*.properties"
+    List<String> ymlLocations = ["*messages*.yml"]
+
+    @Value('${yakworks.i18n.externalLocation}')
+    Resource externalRoot
+
+    @Value('${yakworks.i18n.cacheSeconds:0}')
+    Integer cacheSecondsConfig
 
     GrailsICUMessageSource() {
         super()
@@ -51,19 +59,23 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
     }
 
     void afterPropertiesSet() throws Exception {
-
+        if(cacheSecondsConfig){
+            super.setCacheSeconds(cacheSecondsConfig)
+        }
         if (localResourceLoader == null) {
             return;
         }
 
         Resource[] resources;
 
+        // assert externalRoot.exists()
+
         // make it so its not case sensitive and wild card matching is a bit easier
         //for example we can overriide and do "classpath*:*messages*.properties" to pick up ValidationMessages and messages
         (resourceResolver.pathMatcher as AntPathMatcher).setCaseSensitive(false)
 
         if(searchClasspath) {
-            resources = resourceResolver.getResources(messageBundleLocationPattern);
+            resources = resourceResolver.getResources(messageBundleLocations);
         }
         else {
             DefaultGrailsApplication defaultGrailsApplication = (DefaultGrailsApplication) grailsApplication;
@@ -71,7 +83,7 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
                 GrailsApplicationClass applicationClass = defaultGrailsApplication.getApplicationClass();
                 if(applicationClass != null) {
                     ResourcePatternResolver resourcePatternResolver = new ClassRelativeResourcePatternResolver(applicationClass.getClass());
-                    resources = resourcePatternResolver.getResources(messageBundleLocationPattern);
+                    resources = resourcePatternResolver.getResources(messageBundleLocations);
                 }
             }
         }
@@ -99,7 +111,7 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
 
     PluginMessagesMerger getPluginMessagesMerger(){
         def pluginMessagesMerger = new PluginMessagesMerger(pluginManager)
-        pluginMessagesMerger.ymlLocationPatterns = ymlLocationPatterns
+        pluginMessagesMerger.ymlLocationPatterns = ymlLocations
         return pluginMessagesMerger
     }
 
@@ -113,6 +125,16 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
     protected void mergePluginProperties(final Locale locale, Properties mergedProps) {
         final GrailsPlugin[] allPlugins = pluginManager.getAllPlugins();
         getPluginMessagesMerger().mergePluginProperties(locale, mergedProps)
+    }
+
+    @Override //implement the empty mergePluginProperties which gets called first
+    protected long mergeExternalProperties(final Locale locale, Properties mergedProps) {
+        if(externalRoot){
+            def emm = new ExternalMessagesMerger(externalRoot)
+            return emm.mergeExternalProperties(locale, mergedProps)
+        } else {
+            return -1
+        }
     }
 
     @Override

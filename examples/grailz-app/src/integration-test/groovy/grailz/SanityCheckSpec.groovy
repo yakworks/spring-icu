@@ -37,4 +37,9 @@ class SanityCheckSpec extends Specification {
         'must be less than or equal to 1' == messageSource.get('jakarta.validation.constraints.Max.message', [value:1])
         'Got it' == messageSource.get('some.validation.message')
     }
+
+    void 'should pick up external'() {
+        expect:
+        'success' == messageSource.get('external.label')
+    }
 }

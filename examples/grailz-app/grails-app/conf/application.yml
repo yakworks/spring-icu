@@ -1,3 +1,6 @@
+yakworks:
+  i18n:
+    externalLocation: "file:./external-messages"
 grails:
   profile: plugin
   codegen:

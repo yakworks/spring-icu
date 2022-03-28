@@ -113,6 +113,11 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
         //empty, can be overridden for loading defualts first
     }
 
+    protected long mergeExternalProperties(final Locale locale, Properties mergedProps) {
+        //empty, can be overridden for loading external overrides last
+        return -1;
+    }
+
     @Override
     protected List<String> calculateAllFilenames(String basename, Locale locale) {
         Map<Locale, List<String>> localeMap = this.cachedFilenames.get(basename);
@@ -166,6 +171,12 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
                     }
                 }
             }
+        }
+
+        // merge externals if method is implemented
+        long latestExternalTimestamp = mergeExternalProperties(locale, mergedProps);
+        if(latestExternalTimestamp != -1){
+            latestTimestamp = latestExternalTimestamp;
         }
 
         mergedHolder = new PropertiesHolder(mergedProps, latestTimestamp);
