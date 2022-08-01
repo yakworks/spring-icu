@@ -9,7 +9,7 @@ import java.time.ZoneId
 import yakworks.message.MsgContext
 import yakworks.message.MsgKey
 
-import static yakworks.message.DefaultMsgContext.*
+import static yakworks.message.MsgContext.*
 
 class KitchenSinkSpec extends Specification  {
 

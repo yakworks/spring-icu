@@ -9,7 +9,7 @@ class MsgContextSpec extends Specification  {
         def msgCtx = MsgContext.of(Locale.getDefault())
 
         then: 'should have set it up'
-        msgCtx instanceof DefaultMsgContext
+        msgCtx instanceof MsgContext
 
         when: 'fallbackMessage is set'
         msgCtx.fallbackMessage("go go go")
