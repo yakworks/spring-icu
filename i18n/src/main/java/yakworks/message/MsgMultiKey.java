@@ -1,6 +1,5 @@
-package yakworks.i18n;
+package yakworks.message;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 /**

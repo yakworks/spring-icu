@@ -2,7 +2,7 @@
 * Copyright 2019 Yak.Works - Licensed under the Apache License, Version 2.0 (the "License")
 * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 */
-package yakworks.i18n
+package yakworks.message
 
 import groovy.transform.CompileStatic
 
@@ -12,16 +12,11 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class MsgKeyUtils {
 
-    // static MsgKey addArg(MsgKey msgKey, String key, Object val) {
-    //     if(val != null) {
-    //         if (msgKey.args == null && msgKey.respondsTo('setArgs')) {
-    //             msgKey['args'] = new LinkedHashMap<>()
-    //         }
-    //         msgKey.args.put("defaultMessage", defMsg)
-    //     }
-    //     return msgKey
-    // }
-
+    /**
+     * fuzzy helper to get message key from target byt looking at it properties
+     * i target has a code or fallbackMessage then it uses them.
+     * look for params and msgArgs to find  the args
+     */
     static MsgKey toMsgKey(Object target, String code = null) {
         if(MsgKey.isAssignableFrom(target.class)){
             return (MsgKey)target

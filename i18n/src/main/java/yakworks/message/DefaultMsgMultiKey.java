@@ -1,9 +1,9 @@
-package yakworks.i18n;
+package yakworks.message;
 
 import java.util.List;
 
 /**
- * Default implementation of the MsgKey, normally should be build with
+ * Default implementation of the MsgKey, normally would be build with the static helpers
  * MsgKey.of('somekey',....), not directly with this class
  *
  *  @author Joshua Burnett (@basejump)

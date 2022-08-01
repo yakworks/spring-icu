@@ -3,10 +3,9 @@ package testify
 import grails.config.Config
 import grails.core.GrailsApplication
 import grails.testing.mixin.integration.Integration
-import spock.lang.Ignore
 import spock.lang.Specification
-import yakworks.i18n.MsgContext
-import yakworks.i18n.MsgKey
+import yakworks.message.MsgContext
+import yakworks.message.MsgKey
 import yakworks.i18n.icu.ICUMessageSource
 
 // Use as a simple to test when trying to see why application context has problem on init

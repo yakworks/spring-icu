@@ -1,4 +1,4 @@
-package yakworks.i18n
+package yakworks.message
 
 import spock.lang.Specification
 

@@ -1,7 +1,4 @@
-package yakworks.i18n;
-
-import javax.annotation.Nullable;
-import java.util.Map;
+package yakworks.message;
 
 /**
  * add to a class that has a MsgKey reference as field msg

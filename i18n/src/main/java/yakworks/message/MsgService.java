@@ -1,7 +1,6 @@
-package yakworks.i18n;
+package yakworks.message;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Similiar to org.springframework.context.MessageSource but no dependencies

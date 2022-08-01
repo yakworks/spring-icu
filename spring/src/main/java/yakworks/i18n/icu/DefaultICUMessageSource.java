@@ -16,14 +16,12 @@
 
 package yakworks.i18n.icu;
 
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.PropertyPlaceholderHelper;
-import yakworks.i18n.MsgContext;
+import yakworks.message.MsgContext;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -150,7 +148,7 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
         }
 
         //update the local in case we need it
-        msgCtx.locale(checkLocale(msgCtx.getLocale()));
+        msgCtx.setLocale( checkLocale(msgCtx.getLocale()) );
 
         MsgContext msgCtxToUse = msgCtx;
 

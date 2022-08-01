@@ -1,4 +1,4 @@
-package yakworks.i18n;
+package yakworks.message;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -25,6 +25,11 @@ public class MsgArgs {
         return new MsgArgs().args(args);
     }
 
+    /**
+     * similiar to Optional.
+     * @return returns the value of args
+     * @throws NoSuchElementException if args is null
+     */
     public Object get() {
         if (value == null) {
             throw new NoSuchElementException("No value present, call args() to set first");
@@ -32,10 +37,14 @@ public class MsgArgs {
         return value;
     }
 
-    public boolean isPresent() {
-        return value != null;
-    }
+    // public boolean isPresent() {
+    //     return value != null;
+    // }
 
+    /**
+     * sets the args, if array converts to List.
+     * @param args array list or map
+     */
     public void setArgs(Object args){
         if(MsgArgs.isEmpty(args)) {
             args = new LinkedHashMap<>();
@@ -51,6 +60,10 @@ public class MsgArgs {
         }
     }
 
+    /**
+     * sets args
+     * @see #setArgs(Object)
+     */
     public MsgArgs args(Object args){
         setArgs(args);
         return this;
@@ -109,7 +122,8 @@ public class MsgArgs {
     }
 
     /**
-     * static helper to lookup the fallback in the args if its a map
+     * static helper to lookup the fallback in the args if its a map.
+     * Looks for fallbackMessage or defaultMessage key, in that order
      */
     public String getFallbackMessage(){
         if (isMap()){

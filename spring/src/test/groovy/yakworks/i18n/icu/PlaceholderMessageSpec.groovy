@@ -1,7 +1,7 @@
 package yakworks.i18n.icu
 
 import spock.lang.Specification
-import yakworks.i18n.MsgKey
+import yakworks.message.MsgKey
 
 class PlaceholderMessageSpec extends Specification  {
 

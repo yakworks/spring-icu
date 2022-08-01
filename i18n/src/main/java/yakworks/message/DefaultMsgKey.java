@@ -1,4 +1,4 @@
-package yakworks.i18n;
+package yakworks.message;
 
 /**
  * Default implementation of the MsgKey, normally should be build with
