@@ -72,7 +72,7 @@ jobs:
       - save_build_cache
 
   ship-it:
-    executor: builder-large
+    executor: builder-medium
     steps:
       - checkout
       - restore_gradle_cache
