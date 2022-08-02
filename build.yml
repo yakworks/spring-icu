@@ -11,17 +11,14 @@ project:
 
 bot:
   email: 9cibot@9ci.com
-  user: 9cibot2
+  sign_commits: true
 
-vault_url: https://github.com/9ci/vault.git
-
-version:
-  # after release, will set version.properties back to snapshot=true
-  set_snapshot: true
+vault:
+  repo: 9ci/vault
 
 release:
-  changelog: CHANGELOG.md
-  branch_regex: master|release/.+
+  # after release, will set version.properties back to snapshot=true or releasable=false
+  reset_flag: true
 
 team:
   developers: ['basejump: Joshua Burnett']
@@ -40,3 +37,5 @@ spotless:
   groovy:
     excludes:
       - '**/conf/**/*.groovy'
+
+
