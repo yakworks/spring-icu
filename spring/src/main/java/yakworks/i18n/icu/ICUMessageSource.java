@@ -3,7 +3,7 @@ package yakworks.i18n.icu;
 import org.springframework.context.HierarchicalMessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.i18n.LocaleContextHolder;
-import yakworks.message.MsgService;
+import yakworks.message.spi.MsgService;
 
 import java.util.Locale;
 
