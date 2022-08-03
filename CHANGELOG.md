@@ -1,3 +1,8 @@
+### v5.1
+
+[Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v0.5.2...v5.1)
+- Message refactored to commons (#4) [link](https://github.com/yakworks/spring-icu4j/commit/52130f5ff3a117e537304799a9a60f50c4e04f5b)
+
 ### v0.5.2
 
 [Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v0.5.1...v0.5.2)
