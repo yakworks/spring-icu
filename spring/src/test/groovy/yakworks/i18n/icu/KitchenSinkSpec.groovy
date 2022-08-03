@@ -1,13 +1,15 @@
 package yakworks.i18n.icu
 
 import spock.lang.Specification
-import yakworks.i18n.MsgMultiKey;
+import yakworks.message.MsgMultiKey;
 
 import java.time.LocalDate
 import java.time.ZoneId
 
-import yakworks.i18n.MsgContext
-import yakworks.i18n.MsgKey
+import yakworks.message.MsgContext
+import yakworks.message.MsgKey
+
+import static yakworks.message.MsgContext.*
 
 class KitchenSinkSpec extends Specification  {
 
@@ -187,7 +189,7 @@ class KitchenSinkSpec extends Specification  {
 
     void "fallback in message context"() {
         expect:
-        "got me" == msgService.get("nonexistent.message", MsgContext.withFallback('got me'));
+        "got me" == msgService.get("nonexistent.message", withFallback('got me'));
     }
 
     void 'fallback in argument map'() {

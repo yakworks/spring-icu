@@ -5,28 +5,29 @@ apply plugin:"war"
 apply plugin:"org.grails.grails-web"
 apply plugin:"org.grails.grails-gsp"
 
+apply from: "${rootProject.projectDir}/gradle/test-unit.gradle"
 
 dependencies {
   console "org.grails:grails-console"
 
-  compile project(":testify")
+  implementation project(":testify")
 
-  compile "org.springframework.boot:spring-boot-starter-logging"
-  compile "org.springframework.boot:spring-boot-autoconfigure"
-  compile "org.grails:grails-core"
-  compile "org.springframework.boot:spring-boot-starter-actuator"
-  compile "org.springframework.boot:spring-boot-starter-tomcat"
-  compile "org.grails:grails-web-boot"
-  compile "org.grails:grails-logging"
-  compile "org.grails:grails-plugin-rest"
-  compile "org.grails:grails-plugin-databinding"
-  compile "org.grails:grails-plugin-i18n"
-  compile "org.grails:grails-plugin-services"
-  compile "org.grails:grails-plugin-url-mappings"
-  compile "org.grails:grails-plugin-interceptors"
+  implementation "org.springframework.boot:spring-boot-starter-logging"
+  implementation "org.springframework.boot:spring-boot-autoconfigure"
+  implementation "org.grails:grails-core"
+  implementation "org.springframework.boot:spring-boot-starter-actuator"
+  implementation "org.springframework.boot:spring-boot-starter-tomcat"
+  implementation "org.grails:grails-web-boot"
+  implementation "org.grails:grails-logging"
+  implementation "org.grails:grails-plugin-rest"
+  implementation "org.grails:grails-plugin-databinding"
+  implementation "org.grails:grails-plugin-i18n"
+  implementation "org.grails:grails-plugin-services"
+  implementation "org.grails:grails-plugin-url-mappings"
+  implementation "org.grails:grails-plugin-interceptors"
 
-  testCompile "org.mockito:mockito-core"
-  testCompile "org.grails:grails-web-testing-support"
+  testImplementation "org.mockito:mockito-core"
+  testImplementation "org.grails:grails-web-testing-support"
 
 }
 

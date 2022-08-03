@@ -1,70 +1,83 @@
 # circleCI build file
 version: 2.1
+
+executors:
+  builder-medium: # 2cpus 4gb ram
+    resource_class: 'medium'
+    environment:
+      GRADLE_OPTS: "-Dorg.gradle.caching=true -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Dorg.gradle.console=plain"
+    docker:
+      - image: yakworks/builder:jdk11
+
+commands:
+  restore_gradle_cache:
+    description: "Common pattern for gradle cache"
+    steps:
+      - run: make gradle.cache-key-file
+      - restore_cache:
+          key: gradle-{{ checksum "cache-key.tmp" }}
+      - restore_cache:
+          key: gradlew-75-{{ checksum "gradlew" }}
+
+  restore_build_cache:
+    description: "combine version.props and day, to have cache per day"
+    steps:
+      # combines version.props with today to use as the key
+      - run: make circle.day-version-cache-key-file
+      - restore_cache:
+          key: build-{{ .Branch }}-{{ checksum "day-version-cache-key.tmp" }}
+
+  save_gradle_cache:
+    description: "saves gradle caches"
+    steps:
+      - save_cache:
+          paths: ["~/.gradle/wrapper"]
+          key: gradlew-75-{{ checksum "gradlew" }}
+      - save_cache:
+          paths: [ "~/.gradle/caches" ]
+          key: gradle-{{ checksum "cache-key.tmp" }}
+
+  save_build_cache:
+    description: "saves build cache"
+    steps:
+      - save_cache:
+          paths: [
+            ".gradle", ".build-cache", "./grails/build",
+            "./spring/build", "./examples/testify/build", "./examples/grailz-app/build"
+          ]
+          key: build-{{ .Branch }}-{{ checksum "day-version-cache-key.tmp" }}
+
+  save_workspace:
+    description: "saves workspace"
+    steps:
+      - persist_to_workspace:
+          root: .
+          paths: [ ".gradle", ".build-cache", "*/build" ]
+
+# ---------------------------------------------------------------------------
 jobs:
   build:
-    docker:
-      - image: yakworks/builder:jdk8
-    resource_class: 'medium+'
-
+    executor: builder-medium
     steps:
       - checkout
+      - restore_gradle_cache
+      - restore_build_cache
 
-      - run: make cache-key-file
-      - restore_cache: &gradle-cache-restore
-          key: gradle-{{ checksum "cache-key.tmp" }}
-
-      - run: make gradle.resolve-dependencies
-
-      - save_cache:
-          paths: [ "~/.m2", "~/.gradle" ]
-          key: gradle-{{ checksum "cache-key.tmp" }}
-
-      - run: make compile
       - run:
-          name: ✔︎ -- Test
+          name: ✔︎ -- Check
           command: make check
 
-      # merge test results to store in circle
-      - run:
-          name: ✔︎ -- Merge Test Results
-          when: always
-          command: make merge-test-results
-
-      - store_test_results:
-          path: build/test-results/
-      - store_artifacts:
-          path: build/reports/
-          destination: /
-      - save_cache:
-          paths: [ ".gradle", "./build", "./spring/build" ]
-          key: build-{{ .Branch }}-{{ .Revision }}
-
-  ship-gh-pages:
-    docker:
-      - image: yakworks/docmark
-
-    steps:
-      - checkout
-      - restore_cache: &build-cache-restore
-          key: build-{{ .Branch }}-{{ .Revision }}
-      - run: make git.config-bot-user # configs the bot user for git
-      - run: make ship.gh-pages
+      - save_gradle_cache
+      - save_workspace
+      - save_build_cache
 
   ship-it:
-    docker:
-      - image: yakworks/builder:jdk8
-    resource_class: 'medium+'
-
+    executor: builder-medium
     steps:
       - checkout
-      - run: make cache-key-file
-      - restore_cache: *gradle-cache-restore
-      - restore_cache:
-          key: build-{{ .Branch }}-{{ .Revision }}
-
-      # setup the docker
-      # - setup_remote_docker
-      # - run: apk add docker
+      - restore_gradle_cache
+      - attach_workspace:
+          at: .
 
       # download vault and decrypts
       - run: make vault.decrypt
@@ -81,11 +94,8 @@ workflows:
     jobs:
       - build:
           context: bot-context #context with shared ENV vars
-#      - ship-gh-pages:
-#          context: bot-context
-#          requires: [ build ]
-#          filters: { branches: { only: [ master, /release\/.*/ ] } }
       - ship-it:
           context: bot-context
-          requires: [ build ]
-          filters: { branches: { only: [ master, /release\/.*/ ] } }
+          requires: [build]
+          filters: { branches: { only: [ master, /release\/.*/, dev ] } }
+

@@ -35,11 +35,14 @@ subprojects { subprj ->
 
   repositories {
     mavenLocal()
-    maven { url "https://repo.grails.org/grails/core" }
     mavenCentral()
-    maven { url "http://repo.9ci.com/public-libs" }
-    maven { url "http://repo.9ci.com/oss-snapshots" }
-
+    maven { url "https://repo.grails.org/grails/core" }
+    maven {
+      url "http://repo.9ci.com/oss-snapshots"
+      allowInsecureProtocol = true
+      mavenContent { snapshotsOnly() }
+    }
+    maven { url "http://repo.9ci.com/public-libs"; allowInsecureProtocol = true }
   }
   // get prop with default if null, converts to boolean
   Closure getProp = { pname, defualtv -> (subprj.findProperty(pname)?:defualtv).toBoolean() }
@@ -87,8 +90,6 @@ subprojects { subprj ->
   } // end isPublishable
 
   configurations {
-    testCompile.extendsFrom compileOnly //includes the compileOnly in tests too so we don't have to list twice
-    testCompile.extendsFrom implementation
     testImplementation.extendsFrom compileOnly
     // compile.extendsFrom implementation
     all {

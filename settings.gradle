@@ -2,7 +2,6 @@ rootProject.name = 'yakworks-i18n'
 //the releasable plugins
 include 'spring'
 include 'grails'
-include 'i18n'
 include 'examples/testify'
 include 'examples/grailz-app'
 
