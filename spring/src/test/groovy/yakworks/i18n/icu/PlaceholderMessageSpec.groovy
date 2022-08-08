@@ -1,6 +1,7 @@
 package yakworks.i18n.icu
 
 import spock.lang.Specification
+import yakworks.message.Msg
 import yakworks.message.MsgKey
 
 class PlaceholderMessageSpec extends Specification  {
@@ -18,7 +19,7 @@ class PlaceholderMessageSpec extends Specification  {
     void "test if placeHolders works"() {
         expect:
         "I am 🔥, Hi {name}" == messageSource.get("testing.namedWithRef")
-        "I am 🔥, Hi Bobz" == messageSource.get(MsgKey.of("testing.namedWithRef", [name: 'Bobz']) )
+        "I am 🔥, Hi Bobz" == messageSource.get(Msg.key("testing.namedWithRef", [name: 'Bobz']) )
 
     }
 

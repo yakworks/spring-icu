@@ -1,6 +1,7 @@
 package yakworks.i18n.icu
 
 import spock.lang.Specification
+import yakworks.message.Msg
 import yakworks.message.MsgMultiKey;
 
 import java.time.LocalDate
@@ -108,7 +109,7 @@ class KitchenSinkSpec extends Specification  {
 
     void "should pick up plurals exacts"() {
         expect:
-        expected == msgService.get(MsgKey.of("plurals.exact.matches", [count: count]))
+        expected == msgService.get(Msg.key("plurals.exact.matches", [count: count]))
 
         where:
         count | expected
@@ -119,7 +120,7 @@ class KitchenSinkSpec extends Specification  {
 
     void "plural offseting"() {
         expect:
-        expected == msgService.get(MsgKey.of("plurals.offsetting.form", [count: count]))
+        expected == msgService.get(Msg.key("plurals.offsetting.form", [count: count]))
 
         where:
         count | expected
@@ -131,7 +132,7 @@ class KitchenSinkSpec extends Specification  {
 
     void "gender select"() {
         expect:
-        expected == msgService.get(MsgKey.of("select", [gender: gender]))
+        expected == msgService.get(Msg.key("select", [gender: gender]))
 
         where:
         gender | expected
@@ -142,7 +143,7 @@ class KitchenSinkSpec extends Specification  {
 
     void "ordinal args"() {
         expect:
-        expected == msgService.get(MsgKey.of("ordinals", [count: count]))
+        expected == msgService.get(Msg.key("ordinals", [count: count]))
 
         where:
         count | expected
@@ -155,7 +156,7 @@ class KitchenSinkSpec extends Specification  {
 
     void testNumbers() {
         expect:
-        String msg = msgService.get(MsgKey.of("numbers", [size: 0.9]));
+        String msg = msgService.get(Msg.key("numbers", [size: 0.9]));
         "You're using 90% of your quota" == msg
     }
 
@@ -173,7 +174,7 @@ class KitchenSinkSpec extends Specification  {
         args.put("epoch", date);
 
         then:
-        "The unix epoch is Jan 1, 1970" == msgService.get(MsgKey.of("dates", args));
+        "The unix epoch is Jan 1, 1970" == msgService.get(Msg.key("dates", args));
     }
 
     void testDefaultMessage() {
@@ -197,7 +198,7 @@ class KitchenSinkSpec extends Specification  {
         Map args = ["unimportant": "not used", fallbackMessage: 'got me']
 
         then:
-        "got me" == msgService.get(MsgKey.of("nonexistent.message", args));
+        "got me" == msgService.get(Msg.key("nonexistent.message", args));
     }
 
     void 'null local only'() {
@@ -228,11 +229,11 @@ class KitchenSinkSpec extends Specification  {
     void "multiKey args"() {
         expect:
         //first one is not there, second gets picked up
-        def mmk = MsgMultiKey.of(MsgKey.of('', [name: 'Bob'])).codes(["nonexistent.message", 'testing.named'])
+        def mmk = MsgMultiKey.of(Msg.key('', [name: 'Bob'])).codes(["nonexistent.message", 'testing.named'])
         "Hi Bob" == msgService.get(mmk)
 
         //first one is not there, second gets picked up
-        def mmk2 = MsgMultiKey.of(MsgKey.of('', [name: 'Bob'])).codes(["testing.named2", 'testing.named'])
+        def mmk2 = MsgMultiKey.of(Msg.key('', [name: 'Bob'])).codes(["testing.named2", 'testing.named'])
         "Hi Bob 2" == msgService.get(mmk2)
     }
 

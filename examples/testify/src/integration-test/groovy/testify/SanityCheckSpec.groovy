@@ -4,6 +4,7 @@ import grails.config.Config
 import grails.core.GrailsApplication
 import grails.testing.mixin.integration.Integration
 import spock.lang.Specification
+import yakworks.message.Msg
 import yakworks.message.MsgContext
 import yakworks.message.MsgKey
 import yakworks.i18n.icu.ICUMessageSource
@@ -28,7 +29,7 @@ class SanityCheckSpec extends Specification {
 
     void 'maps for named arguments'() {
         when:
-        MsgKey msgKey = MsgKey.of('named.arguments', [name: 'foo'])
+        MsgKey msgKey = Msg.key('named.arguments', [name: 'foo'])
 
         String msg = messageSource.get(msgKey)
 
@@ -38,7 +39,7 @@ class SanityCheckSpec extends Specification {
 
     void 'without arguments'() {
         when:
-        MsgKey msgKey = MsgKey.ofCode('named.arguments')
+        MsgKey msgKey = Msg.key('named.arguments')
 
         String msg = messageSource.get(msgKey)
 
@@ -71,7 +72,7 @@ class SanityCheckSpec extends Specification {
 
     void 'with default'() {
         when:
-        MsgKey msgKey = MsgKey.ofCode('nonexistent').fallbackMessage("no such animal")
+        MsgKey msgKey = Msg.key('nonexistent').fallbackMessage("no such animal")
 
         String msg = messageSource.get(msgKey)
 
@@ -81,7 +82,7 @@ class SanityCheckSpec extends Specification {
 
     void 'when default has named args'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco']).fallbackMessage("have a {name} 🌮")
+        MsgKey msgKey = Msg.key('nonexistent', [name: 'taco']).fallbackMessage("have a {name} 🌮")
 
         String msg = messageSource.get(msgKey)
 
@@ -91,7 +92,7 @@ class SanityCheckSpec extends Specification {
 
     void 'when args have an emoji'() {
         when:
-        MsgKey msgKey = MsgKey.of('nonexistent', [name: 'taco 🌮']).fallbackMessage("have a {name}")
+        MsgKey msgKey = Msg.key('nonexistent', [name: 'taco 🌮']).fallbackMessage("have a {name}")
 
         String msg = messageSource.get(msgKey)
 
