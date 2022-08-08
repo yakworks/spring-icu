@@ -4,6 +4,9 @@
 */
 package yakworks.i18n.icu
 
+import yakworks.message.MsgServiceRegistry
+import yakworks.message.spi.MsgService
+
 @SuppressWarnings('Indentation')
 class Icu4jGrailsPlugin extends grails.plugins.Plugin {
 
@@ -21,4 +24,10 @@ class Icu4jGrailsPlugin extends grails.plugins.Plugin {
         }
 
     }}
+
+    //FIXME hack for now to set the msgSource
+    @Override
+    void doWithApplicationContext() {
+        MsgServiceRegistry.setService(applicationContext.getBean("messageSource", MsgService))
+    }
 }
