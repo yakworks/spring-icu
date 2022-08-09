@@ -1,3 +1,9 @@
+### v5.2
+
+[Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v5.1...v5.2)
+- release and bump [link](https://github.com/yakworks/spring-icu4j/commit/45be947210346fdb1b4e4a019090cd1ae55aca86)
+- refactor (#5) [link](https://github.com/yakworks/spring-icu4j/commit/0106f673b853770f67a34c2fb027e50117090ad1)
+
 ### v5.1
 
 [Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v0.5.2...v5.1)
