@@ -1,3 +1,8 @@
+### v5.3
+
+[Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v5.2...v5.3)
+- bump commons api-messages [link](https://github.com/yakworks/spring-icu4j/commit/b1ec10365df0446e2cbf0eb1e3ad9c18a4180d93)
+
 ### v5.2
 
 [Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v5.1...v5.2)
