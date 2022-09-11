@@ -1,3 +1,8 @@
+### v5.4
+
+[Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v5.3...v5.4)
+- bump grails for testing, bump groovy api-messages to 3.6, remove deprecated PropertyPlaceholderConfigurer [link](https://github.com/yakworks/spring-icu4j/commit/9aef1cd81b466fdfe1358f8e720485d84d17f69c)
+
 ### v5.3
 
 [Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v5.2...v5.3)
