@@ -17,8 +17,8 @@
 package yakworks.i18n.icu;
 
 import com.ibm.icu.text.MessageFormat;
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
@@ -72,8 +72,8 @@ public class ICUBundleMessageSource extends ReloadableResourceBundleMessageSourc
     private final ConcurrentMap<String, Map<Locale, List<String>>> cachedFilenames = new ConcurrentHashMap<>();
 
     PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper(
-        PropertyPlaceholderConfigurer.DEFAULT_PLACEHOLDER_PREFIX, PropertyPlaceholderConfigurer.DEFAULT_PLACEHOLDER_SUFFIX,
-        PropertyPlaceholderConfigurer.DEFAULT_VALUE_SEPARATOR, true);
+        PropertySourcesPlaceholderConfigurer.DEFAULT_PLACEHOLDER_PREFIX, PropertySourcesPlaceholderConfigurer.DEFAULT_PLACEHOLDER_SUFFIX,
+        PropertySourcesPlaceholderConfigurer.DEFAULT_VALUE_SEPARATOR, true);
 
     @Override
     @Nullable
