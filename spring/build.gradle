@@ -5,15 +5,21 @@ apply from: "${rootProject.projectDir}/gradle/compile.gradle"
 apply from: "${rootProject.projectDir}/gradle/test-unit.gradle"
 
 dependencies {
+  compileOnly 'org.springframework.boot:spring-boot-starter-actuator:2.7.4'
+  compileOnly 'org.springframework.boot:spring-boot-starter-web:2.7.4'
+  compileOnly "org.springframework.boot:spring-boot-starter-logging:2.7.4"
+  compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+
   // api project(":i18n")
   api "org.yakworks:api-messages:${vApiMessges}"
   api "com.ibm.icu:icu4j:${vICU4j}"
   api "org.yaml:snakeyaml:${vSnakeyaml}"
+  compileOnly "org.codehaus.groovy:groovy:$groovyVersion"
 
   compileOnly "com.github.spotbugs:spotbugs-annotations:${vSpotBugs}"
-  compileOnly("org.springframework:spring-context:${springVersion}") {
-    exclude group: 'commons-logging', module: 'commons-logging'
-  }
+  // compileOnly("org.springframework:spring-context:${springVersion}") {
+  //   exclude group: 'commons-logging', module: 'commons-logging'
+  // }
 
   testImplementation "org.slf4j:slf4j-simple:${vSlf4j}"
 

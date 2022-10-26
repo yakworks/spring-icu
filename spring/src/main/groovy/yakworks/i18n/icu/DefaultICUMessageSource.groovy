@@ -1,37 +1,29 @@
 /*
- * Copyright 2002-2018 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+* Copyright 2002-2018 Yak.Works - Licensed under the Apache License, Version 2.0 (the "License")
+* You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+*/
 package yakworks.i18n.icu;
 
-import org.springframework.context.MessageSourceResolvable;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.lang.Nullable;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.PropertyPlaceholderHelper;
-import yakworks.message.MsgContext;
+import javax.annotation.PostConstruct
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
+import groovy.transform.CompileStatic
+
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.MessageSourceResolvable
+import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.core.io.Resource
+import org.springframework.core.io.ResourceLoader
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
+import org.springframework.lang.Nullable
+import org.springframework.util.ObjectUtils
+import org.springframework.util.PropertyPlaceholderHelper
+
+import yakworks.message.MsgContext
 
 /**
  * ICU4j Overrides, Lots of copy/paste from ReloadableResourceBundleMessageSource as it wasn't made to be easy to override
  * and so much is private and final there.
- * The core issue here is that we need to return com.ibm.icu.text.MessageFormat and NOT java.text.MessageFormat
+ * The core difference here is that we need to return com.ibm.icu.text.MessageFormat and NOT java.text.MessageFormat
  * from many of the methods and so can't easily override
  * basically overrides what we need from {@link org.springframework.context.support.MessageSourceSupport} and
  * {@link org.springframework.context.support.AbstractMessageSource}
@@ -40,16 +32,53 @@ import java.util.Properties;
  *  @since 0.3.0
  */
 @SuppressWarnings("unchecked")
+@CompileStatic
 public class DefaultICUMessageSource extends ICUBundleMessageSource implements ICUMessageSource {
 
     public static final com.ibm.icu.text.MessageFormat INVALID_MESSAGE_FORMAT = new com.ibm.icu.text.MessageFormat("");
 
     private final Map<String, Map<Locale, com.ibm.icu.text.MessageFormat>> messageFormatsPerMessage = new HashMap<>();
 
+    @Value('${yakworks.i18n.externalLocation}')
+    Resource externalRoot
+
+    @Value('${yakworks.i18n.cacheSeconds:0}')
+    Integer cacheSecondsConfig
+
+    protected ResourceLoader localResourceLoader
+    PathMatchingResourcePatternResolver resourceResolver
+
     public DefaultICUMessageSource(){
         //set defaults
         setBasename("classpath:messages");
         setDefaultEncoding("UTF-8");
+    }
+
+    @PostConstruct
+    void init() throws Exception {
+        if (cacheSecondsConfig) {
+            super.setCacheSeconds(cacheSecondsConfig)
+        }
+    }
+
+    @Override //implement the empty mergePluginProperties which gets called first
+    protected long mergeExternalProperties(final Locale locale, Properties mergedProps) {
+        if(externalRoot){
+            def emm = new ExternalMessagesMerger(externalRoot)
+            return emm.mergeExternalProperties(locale, mergedProps)
+        } else {
+            return -1
+        }
+    }
+
+    @Override
+    void setResourceLoader(ResourceLoader resourceLoader) {
+        super.setResourceLoader(resourceLoader);
+
+        this.localResourceLoader = resourceLoader;
+        if (resourceResolver == null) {
+            resourceResolver = new CachingPathMatchingResourcePatternResolver(localResourceLoader);
+        }
     }
 
     /**
@@ -160,9 +189,9 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
             String message = resolveCodeWithoutArguments(code, msgCtx.getLocale());
 
             if (message != null) {
-                PropertyPlaceholderHelper.PlaceholderResolver noArgsPlaceholderResolver = (String prop) -> {
+                def noArgsPlaceholderResolver = { String prop ->
                     return resolveCodeWithoutArguments(prop, msgCtx.getLocale());
-                };
+                } as PropertyPlaceholderHelper.PlaceholderResolver;
                 return placeholderHelper.replacePlaceholders(message, noArgsPlaceholderResolver);
             }
         }
@@ -199,7 +228,7 @@ public class DefaultICUMessageSource extends ICUBundleMessageSource implements I
      * @return a new MsgContext
      */
     protected MsgContext resolveArguments(MsgContext msgCtx) {
-        return (MsgContext) msgCtx.transform( item -> {
+        return (MsgContext) msgCtx.transform( { item ->
             if (item instanceof MessageSourceResolvable)
                 return getMessage((MessageSourceResolvable) item, msgCtx.getLocale());
             return item;

@@ -137,24 +137,17 @@ begins quoting, which requires common text like "don't" and "aujourd'hui" to be 
 - Date interval formats: "Dec 15-17, 2009"
 
 
-## Explanation
+## Spring MessageSource vs ICUMessageSource
 
-While `com.transferwise.icu.ICUMessageSource` defines methods that take a named argument map, `org.springframework.context.MessageSource` does not. 
+While `yakworks.i18n.icu.ICUMessageSource` defines methods that take a named argument map, 
+`org.springframework.context.MessageSource` does not. 
 Therefore, in order to support ICU in code that expects a `org.springframework.context.MessageSource` message source, 
 such as Thymeleaf's [#messages](https://www.thymeleaf.org/doc/tutorials/2.1/usingthymeleaf.html#messages-1), 
 we check if the first argument of the `Object[] args` parameter passed to `org.springframework.context.MessageSource#getMessage` 
-is a Map and if so cast that argument to a `Map<String, Object>` and call `com.transferwise.icu.ICUMessageSource#getMessage`
-
-See com.transferwise.icu.ICUAbstractMessageSource.isNamedArgumentsMapPresent
+is a Map and if so cast that argument to a `Map<String, Object>` and call `ICUMessageSource#getMessage`
 
 ## Yaml
 
-https://github.com/akkinoc/yaml-resource-bundle
-https://stackoverflow.com/questions/43655895/spring-boot-yml-resourcebundle-file
-https://gist.github.com/composite/eb3a3fd85d7ba9891f860e4a9fed06b9
-
-
-# License
-This library is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
-
-(c) All rights reserved
+- https://github.com/akkinoc/yaml-resource-bundle
+- https://stackoverflow.com/questions/43655895/spring-boot-yml-resourcebundle-file
+- https://gist.github.com/composite/eb3a3fd85d7ba9891f860e4a9fed06b9

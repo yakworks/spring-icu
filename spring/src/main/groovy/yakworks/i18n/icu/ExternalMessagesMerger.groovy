@@ -44,7 +44,7 @@ class ExternalMessagesMerger {
                 }
 
             } catch (IOException e) {
-                log.error("IOException loading i18n yaml messages", e)
+                ExternalMessagesMerger.log.error("IOException loading i18n yaml messages", e)
             }
         }
         return [props: properties, lastTimeStamp: lastTimeStamp]
