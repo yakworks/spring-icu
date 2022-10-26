@@ -9,7 +9,6 @@ import java.nio.charset.Charset
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
-import org.grails.core.io.StaticResourceLoader
 import org.springframework.core.io.Resource
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.core.io.support.ResourcePatternResolver
@@ -41,7 +40,7 @@ class MessagesFilter {
             resources = resources.length > 0 ? filterResources(resources, suffix, locale) : resources
 
         } catch (IOException e) {
-            log.error("IOException loading i18n yaml messages", e)
+            MessagesFilter.log.error("IOException loading i18n yaml messages", e)
         }
 
         return resources

@@ -107,6 +107,11 @@ subprojects { subprj ->
 //overrides for the yakworks shipkit configs
 ext.codenarcRuleset= '''
   // getRule('Println').enabled = false
+  getRule('ClosureAsLastMethodParameter').enabled = false
+  getRule('EmptyCatchBlock').enabled = false
+  getRule('UnnecessaryToString').enabled = false
+  getRule('ExplicitHashMapInstantiation').enabled = false
+
 '''
 
 //TEST logging config for the logger plugin

@@ -4,16 +4,12 @@
 */
 package yakworks.i18n.icu
 
+import javax.annotation.PostConstruct
+
 import groovy.transform.CompileStatic
 
-import org.grails.core.io.CachingPathMatchingResourcePatternResolver
 import org.grails.core.support.internal.tools.ClassRelativeResourcePatternResolver
-import org.springframework.beans.factory.InitializingBean
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.io.FileSystemResource
 import org.springframework.core.io.Resource
-import org.springframework.core.io.ResourceLoader
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.core.io.support.ResourcePatternResolver
 import org.springframework.util.AntPathMatcher
 
@@ -31,22 +27,14 @@ import grails.util.GrailsStringUtils
  * Mostly implements the mergePluginProperties so those can get loaded before the main ones
  */
 @CompileStatic
-class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsApplicationAware, PluginManagerAware, InitializingBean {
+class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsApplicationAware, PluginManagerAware {
     GrailsApplication grailsApplication
     GrailsPluginManager pluginManager
-    PathMatchingResourcePatternResolver resourceResolver
-    private ResourceLoader localResourceLoader
 
     boolean searchClasspath = false
     //What to search for in app
     String messageBundleLocations = "classpath*:messages*.properties"
     List<String> ymlLocations = ["*messages*.yml"]
-
-    @Value('${yakworks.i18n.externalLocation}')
-    Resource externalRoot
-
-    @Value('${yakworks.i18n.cacheSeconds:0}')
-    Integer cacheSecondsConfig
 
     GrailsICUMessageSource() {
         super()
@@ -58,10 +46,10 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
         this.pluginManager = pluginManager
     }
 
-    void afterPropertiesSet() throws Exception {
-        if(cacheSecondsConfig){
-            super.setCacheSeconds(cacheSecondsConfig)
-        }
+    @PostConstruct
+    @Override
+    void init() throws Exception {
+        super.init()
         if (localResourceLoader == null) {
             return;
         }
@@ -125,26 +113,6 @@ class GrailsICUMessageSource extends DefaultICUMessageSource implements GrailsAp
     protected void mergePluginProperties(final Locale locale, Properties mergedProps) {
         final GrailsPlugin[] allPlugins = pluginManager.getAllPlugins();
         getPluginMessagesMerger().mergePluginProperties(locale, mergedProps)
-    }
-
-    @Override //implement the empty mergePluginProperties which gets called first
-    protected long mergeExternalProperties(final Locale locale, Properties mergedProps) {
-        if(externalRoot){
-            def emm = new ExternalMessagesMerger(externalRoot)
-            return emm.mergeExternalProperties(locale, mergedProps)
-        } else {
-            return -1
-        }
-    }
-
-    @Override
-    void setResourceLoader(ResourceLoader resourceLoader) {
-        super.setResourceLoader(resourceLoader);
-
-        this.localResourceLoader = resourceLoader;
-        if (resourceResolver == null) {
-            resourceResolver = new CachingPathMatchingResourcePatternResolver(localResourceLoader);
-        }
     }
 
 }
