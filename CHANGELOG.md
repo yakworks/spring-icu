@@ -1,3 +1,8 @@
+### v5.5
+
+[Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v5.4...v5.5)
+- move more to spring to only depend on boot and out of grails. grails … (#6) [link](https://github.com/yakworks/spring-icu4j/commit/493e125f75304d9e57f022ceb73e6efa1863ac6b)
+
 ### v5.4
 
 [Full Changelog](https://github.com/yakworks/spring-icu4j/compare/v5.3...v5.4)
